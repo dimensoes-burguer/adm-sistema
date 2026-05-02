@@ -334,7 +334,7 @@ main{padding:14px;max-width:980px;margin:0 auto}
     <section id="espelho" class="page hidden">
       <div class="card">
         <h2>Sistema Python sincronizado</h2>
-        <p>Mostra uma cópia em tempo quase real do sistema aberto no computador.</p>
+        <p>Mostra uma cópia em tempo quase real do sistema aberto no computador. Agora lê também a lista de Em Preparo sincronizada diretamente da memória do Python.</p>
         <button onclick="carregarEspelho()">Atualizar espelho</button>
         <p class="small" id="ultimaSyncPy">Aguardando sincronização...</p>
       </div>
@@ -676,18 +676,22 @@ function pedidoCardHtml(id,p, mostrarStatus=false){
 async function carregarEspelho(){
   try{
     const sistema = await fbGet("/sistema") || {};
-    const preparo = sistema.em_preparo || {};
+    const preparoObj = sistema.em_preparo || {};
+    const preparoLista = Array.isArray(sistema.em_preparo_lista) ? sistema.em_preparo_lista : [];
     const fin = sistema.finalizados || {};
     const funcs = sistema.funcionarios || {};
     const resumo = sistema.resumo || {};
 
+    const prepArr = preparoLista.length
+      ? preparoLista.map((p,i)=>[String(p.id || p.timestamp || i), p]).reverse()
+      : Object.entries(preparoObj).reverse();
+
     document.getElementById("ultimaSyncPy").textContent = sistema.ultima_atualizacao ? `Última atualização: ${sistema.ultima_atualizacao}` : "Ainda sem atualização do sistema Python.";
-    document.getElementById("pyPreparoQtd").textContent = Object.keys(preparo).length;
+    document.getElementById("pyPreparoQtd").textContent = prepArr.length;
     document.getElementById("pyFinalizadosQtd").textContent = Object.keys(fin).length;
     document.getElementById("pyFuncionariosQtd").textContent = Object.keys(funcs).length;
     document.getElementById("pyReceitaTotal").textContent = formatMoney(resumo.receita_total || 0);
 
-    const prepArr = Object.entries(preparo).reverse();
     document.getElementById("pyListaPreparo").innerHTML = prepArr.length
       ? prepArr.map(([id,p])=>pedidoCardHtml(id,p,true)).join("")
       : `<p class="small">Nenhum pedido em preparo sincronizado.</p>`;
