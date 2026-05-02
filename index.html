@@ -21,10 +21,10 @@
 <section id="cupons" class="page hidden"><div class="card"><h2>Cupons</h2><p>Ative/desative cupons rapidamente.</p><div id="listaCupons"></div></div></section>
 <section id="anuncios" class="page hidden"><div class="card"><h2>Anúncios</h2><p>Ative/desative anúncios e acompanhe cliques.</p><div id="listaAnuncios"></div></div></section>
 <section id="stats" class="page hidden"><div class="card"><h2>Estatísticas de hoje</h2><div class="form-row"><label>Data</label><input type="date" id="dataStats"/></div><button onclick="carregarStats(true)">Atualizar estatísticas</button></div><div class="grid2"><div class="metric"><div class="label">Visitas</div><div class="value" id="sVisitas">0</div></div><div class="metric"><div class="label">Online agora</div><div class="value" id="sOnline">0</div></div><div class="metric"><div class="label">Carrinhos</div><div class="value" id="sCarrinhos">0</div></div><div class="metric"><div class="label">Pedidos</div><div class="value" id="sPedidos">0</div></div><div class="metric"><div class="label">Cliques anúncios</div><div class="value" id="sCliques">0</div></div><div class="metric"><div class="label">Cupons usados</div><div class="value" id="sCupons">0</div></div></div></section>
-<section id="espelho" class="page hidden"><div class="card"><h2>Sistema Python sincronizado</h2><p>Resumo em tempo quase real do sistema aberto no computador.</p><button onclick="carregarEspelho(true)">Atualizar espelho</button><p class="small" id="ultimaSyncPy">Aguardando sincronização...</p></div><div class="grid2"><div class="metric"><div class="label">Em Preparo</div><div class="value" id="pyPreparoQtd">0</div></div><div class="metric"><div class="label">Funcionários</div><div class="value" id="pyFuncionariosQtd">0</div></div></div><div class="card"><h3>Relatório por período</h3><p class="small">Começa em hoje. Use o filtro abaixo para ver receita e tipos no período.</p><div class="grid2"><div class="form-row"><label>De</label><input type="date" id="relInicio"></div><div class="form-row"><label>Até</label><input type="date" id="relFim"></div></div><div class="actions"><button onclick="setPeriodoRelatorio('hoje')">Hoje</button><button class="secondary" onclick="setPeriodoRelatorio('7')">7 dias</button><button class="secondary" onclick="setPeriodoRelatorio('30')">30 dias</button><button class="purple" onclick="calcularRelatorioPeriodo()">Ver período</button></div><div id="pyRelatorioPeriodo"></div></div><div class="card"><h3>Pedidos em preparo</h3><div id="pyListaPreparo"></div></div><div class="card"><h3>Funcionários</h3><div id="pyListaFuncionarios"></div></div><div class="card"><h3>Resumo por tipo do período</h3><div id="pyResumoTipos"></div></div></section>
+<section id="espelho" class="page hidden"><div class="card"><h2>Sistema Python sincronizado</h2><p>Resumo em tempo quase real do sistema aberto no computador.</p><button onclick="carregarEspelho(true)">Atualizar espelho</button><p class="small" id="ultimaSyncPy">Aguardando sincronização...</p></div><div class="grid2"><div class="metric"><div class="label">Em Preparo</div><div class="value" id="pyPreparoQtd">0</div></div><div class="metric"><div class="label">Funcionários</div><div class="value" id="pyFuncionariosQtd">0</div></div></div><div class="card"><h3>Relatório por período</h3><p class="small">Começa em hoje. Use o filtro abaixo para ver receita e tipos no período.</p><div class="grid2"><div class="form-row"><label>De</label><input type="date" id="relInicio"></div><div class="form-row"><label>Até</label><input type="date" id="relFim"></div></div><div class="actions"><button onclick="setPeriodoRelatorio('hoje')">Hoje</button><button class="secondary" onclick="setPeriodoRelatorio('7')">7 dias</button><button class="secondary" onclick="setPeriodoRelatorio('30')">30 dias</button><button class="purple" onclick="calcularRelatorioPeriodo()">Ver período</button></div><div id="pyRelatorioPeriodo"></div></div><div class="card"><h3>Funcionários</h3><div id="pyListaFuncionarios"></div></div><div class="card"><h3>Resumo por tipo do período</h3><div id="pyResumoTipos"></div></div></section>
 </main></section>
 <script>
-const FIREBASE_URL="https://dimensoesburguer-85c0f-default-rtdb.firebaseio.com";const SENHA="GS1973";let lojaAberta=false;let paginaAtiva="inicio";let atualizando=false;let sistemaCache={};let preparoCache=[];let finalizadosCachePy=[];let funcionariosCache={};
+const FIREBASE_URL="https://dimensoesburguer-85c0f-default-rtdb.firebaseio.com";const SENHA="GS1973";let lojaAberta=false;let paginaAtiva="inicio";let atualizando=false;let sistemaCache={};let preparoCache=[];let finalizadosCachePy=[];let funcionariosCache={};let tiposExpandidos={};
 function hojeISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function dataMenosDias(dias){const d=new Date();d.setDate(d.getDate()-Number(dias||0));return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 document.getElementById("dataStats").value=hojeISO();document.getElementById("relInicio").value=hojeISO();document.getElementById("relFim").value=hojeISO();document.getElementById("finInicio").value=hojeISO();document.getElementById("finFim").value=hojeISO();
@@ -57,15 +57,88 @@ function filtrarFinalizados(inicio,fim){return finalizadosCachePy.filter(p=>{con
 function setPeriodoFinalizados(tipo){const h=hojeISO();if(tipo==='hoje'){finInicio.value=h;finFim.value=h}else{finInicio.value=dataMenosDias(Number(tipo)-1);finFim.value=h}renderFinalizados()}
 function renderFinalizados(){const inicio=finInicio.value||hojeISO(),fim=finFim.value||hojeISO();const lista=filtrarFinalizados(inicio,fim).slice().sort((a,b)=>parseDateTimePedido(b)-parseDateTimePedido(a));const total=lista.reduce((s,p)=>s+pedidoTotal(p),0);finQtd.textContent=lista.length;finReceita.textContent=formatMoney(total);listaFinalizadosFiltro.innerHTML=lista.length?lista.map((p,i)=>pedidoCardHtml(String(p.id||i),p,false,true)).join(""):`<p class="small">Nenhum pedido finalizado nesse período.</p>`}
 function setPeriodoRelatorio(tipo){const h=hojeISO();if(tipo==='hoje'){relInicio.value=h;relFim.value=h}else{relInicio.value=dataMenosDias(Number(tipo)-1);relFim.value=h}calcularRelatorioPeriodo()}
-function calcularRelatorioPeriodo(){const inicio=relInicio.value||hojeISO(),fim=relFim.value||hojeISO();const lista=filtrarFinalizados(inicio,fim);const porTipo={};let total=0;lista.forEach(p=>{const tipo=tipoNormalizado(p)||'OUTROS';const val=pedidoTotal(p);total+=val;if(!porTipo[tipo])porTipo[tipo]={qtd:0,total:0,itens:{}};porTipo[tipo].qtd++;porTipo[tipo].total+=val;(Array.isArray(p.itens)?p.itens:[]).forEach(item=>{const nome=itemNome(item).trim()||'Item';const qtd=itemQtd(item);porTipo[tipo].itens[nome]=(porTipo[tipo].itens[nome]||0)+qtd;});});pyRelatorioPeriodo.innerHTML=`<div class="grid2" style="margin-top:12px"><div class="metric"><div class="label">Pedidos no período</div><div class="value">${lista.length}</div></div><div class="metric"><div class="label">Receita no período</div><div class="value">${formatMoney(total)}</div></div></div>`;pyResumoTipos.innerHTML=Object.entries(porTipo).map(([tipo,d])=>{const aberto=!!tiposExpandidos[tipo];const itens=Object.entries(d.itens).sort((a,b)=>b[1]-a[1]);const detalhes=aberto?`<div class="tipo-detalhes"><b>Itens mais vendidos no período</b>${itens.length?itens.map(([nome,qtd])=>`<div class="item-row"><span>${escapeHtml(nome)}</span><strong>${qtd}</strong></div>`).join(''):`<p class="small">Nenhum item encontrado nesse tipo.</p>`}</div>`:'';return `<div class="list-card tipo-card" onclick="toggleTipoResumo('${String(tipo).replace(/'/g,"\'")}')"><div><b>${tipo}<span class="chevron">${aberto?'▲':'▼'}</span></b><div class="small">${d.qtd} pedido(s)</div>${detalhes}</div><strong>${formatMoney(d.total)}</strong></div>`}).join("")||`<p class="small">Sem pedidos no período.</p>`}
-async function carregarEspelho(force=false){await carregarSistema(force);pyPreparoQtd.textContent=preparoCache.length;pyFuncionariosQtd.textContent=Object.keys(funcionariosCache||{}).length;const prepArr=preparoCache.map((p,i)=>[String(p.id||p.timestamp||i),p]).reverse();pyListaPreparo.innerHTML=prepArr.length?prepArr.map(([id,p])=>pedidoCardHtml(id,p,true,true)).join(""):`<p class="small">Nenhum pedido em preparo sincronizado.</p>`;const funcArr=Object.entries(funcionariosCache||{});pyListaFuncionarios.innerHTML=funcArr.length?funcArr.map(([id,f])=>`<div class="list-card"><div><b>${f.nome||"Funcionário"}</b><div class="small">${f.cargo||""}</div><div class="small">Diária: ${formatMoney(f.diaria||0)} | Bonificação: ${formatMoney(f.bonificacao||0)}</div></div></div>`).join(""):`<p class="small">Nenhum funcionário sincronizado.</p>`;calcularRelatorioPeriodo()}
-async function carregarCardapio(){const box=listaCardapio;try{const dados=await fbGet("/cardapio_web")||await fbGet("/cardapio")||{};let total=0,html="";Object.entries(dados).forEach(([cat,itens])=>{if(!Array.isArray(itens))return;total+=itens.length;html+=`<div class="card"><h3>${cat}</h3>`;itens.slice(0,20).forEach(item=>{html+=`<div class="list-card"><div><b>${item.nome||"Item"}</b><div class="small">${formatMoney(item.preco||0)}</div></div>${item.imagem?`<img class="preview-img" src="${item.imagem}">`:""}</div>`});html+=`</div>`});box.innerHTML=html||`<p class="small">Não encontrei cardápio em /cardapio_web.</p>`}catch(e){box.innerHTML=`<p style="color:#fca5a5">Erro: ${e.message}</p>`}}
-async function carregarCupons(){const box=listaCupons;try{const dados=await fbGet("/cupons")||{};const entradas=Object.entries(dados);const ativos=entradas.filter(([_,c])=>c.ativo!==false).length;mCupons.textContent=ativos;box.innerHTML=entradas.length?entradas.map(([id,c])=>`<div class="list-card"><div><b>${c.codigo||id}</b><div class="small">${c.nome||""}</div><div class="small">Usos: ${c.usos_usados||0}/${c.usos_maximos||"-"}</div><div class="small">Desconto: ${c.tipo==='percentual'?(c.valor||0)+'%':formatMoney(c.valor||0)}</div></div><button class="${c.ativo===false?'':'red'}" onclick="toggleCupom('${id}',${c.ativo===false})">${c.ativo===false?'Ativar':'Desativar'}</button></div>`).join(""):`<p class="small">Nenhum cupom cadastrado.</p>`}catch(e){box.innerHTML=`<p style="color:#fca5a5">Erro: ${e.message}</p>`}}
-async function toggleCupom(id,ativar){await fbPatch(`/cupons/${id}`,{ativo:ativar});carregarCupons()}
-async function carregarAnuncios(){const box=listaAnuncios;try{const dados=await fbGet("/anuncios")||{};const entradas=Object.entries(dados);const ativos=entradas.filter(([_,a])=>a.ativo!==false).length;mAnuncios.textContent=ativos;box.innerHTML=entradas.length?entradas.map(([id,a])=>`<div class="list-card"><div style="display:flex;gap:10px;align-items:center">${a.imagem?`<img class="preview-img" src="${a.imagem}">`:""}<div><b>${a.titulo||"Anúncio"}</b><div class="small">Cliques: ${a.cliques||0}</div><div class="small">${a.acao||""}</div></div></div><button class="${a.ativo===false?'':'red'}" onclick="toggleAnuncio('${id}',${a.ativo===false})">${a.ativo===false?'Ativar':'Desativar'}</button></div>`).join(""):`<p class="small">Nenhum anúncio cadastrado.</p>`}catch(e){box.innerHTML=`<p style="color:#fca5a5">Erro: ${e.message}</p>`}}
-async function toggleAnuncio(id,ativar){await fbPatch(`/anuncios/${id}`,{ativo:ativar});carregarAnuncios()}
-async function carregarStats(){try{const date=dataStats.value||hojeISO();const stats=await fbGet(`/analytics/dias/${date}`)||{};const online=await fbGet("/analytics/online")||{};const agora=Date.now();const onlineCount=Object.values(online).filter(u=>agora-Number(u.ultimo_ativo||u.lastSeen||0)<65000).length;sVisitas.textContent=stats.visitas||0;sOnline.textContent=onlineCount;sCarrinhos.textContent=stats.carrinhos_iniciados||0;sPedidos.textContent=stats.pedidos_confirmados||0;sCliques.textContent=stats.cliques_anuncios||0;sCupons.textContent=stats.cupons_usados||0}catch(e){console.error(e)}}
-async function atualizarPaginaAtiva(force=false){if(atualizando)return;atualizando=true;try{await carregarLoja();if(['inicio','pedidos','finalizados','espelho'].includes(paginaAtiva))await carregarSistema(force);atualizarInicio();if(paginaAtiva==='pedidos')await carregarPedidos(force);if(paginaAtiva==='finalizados')renderFinalizados();if(paginaAtiva==='espelho')await carregarEspelho(force);if(paginaAtiva==='cardapio')await carregarCardapio();if(paginaAtiva==='cupons')await carregarCupons();if(paginaAtiva==='anuncios')await carregarAnuncios();if(paginaAtiva==='stats')await carregarStats()}finally{atualizando=false}}
+function calcularRelatorioPeriodo(){
+  const inicio=relInicio.value||hojeISO(), fim=relFim.value||hojeISO();
+  const lista=filtrarFinalizados(inicio,fim);
+  const porTipo={};
+  let total=0;
+
+  lista.forEach(p=>{
+    const tipo=(tipoNormalizado(p)||'OUTROS').trim() || 'OUTROS';
+    const val=pedidoTotal(p);
+    total+=val;
+    if(!porTipo[tipo]) porTipo[tipo]={qtd:0,total:0,itens:{}};
+    porTipo[tipo].qtd++;
+    porTipo[tipo].total+=val;
+
+    const itens=Array.isArray(p.itens)?p.itens:[];
+    itens.forEach(item=>{
+      const nome=(itemNome(item)||'Item').trim() || 'Item';
+      const qtd=itemQtd(item);
+      porTipo[tipo].itens[nome]=(porTipo[tipo].itens[nome]||0)+qtd;
+    });
+  });
+
+  pyRelatorioPeriodo.innerHTML=`<div class="grid2" style="margin-top:12px"><div class="metric"><div class="label">Pedidos no período</div><div class="value">${lista.length}</div></div><div class="metric"><div class="label">Receita no período</div><div class="value">${formatMoney(total)}</div></div></div>`;
+
+  const tipos=Object.entries(porTipo).sort((a,b)=>b[1].total-a[1].total);
+  pyResumoTipos.innerHTML=tipos.length?tipos.map(([tipo,d])=>{
+    const aberto=!!tiposExpandidos[tipo];
+    const itens=Object.entries(d.itens).sort((a,b)=>b[1]-a[1]);
+    const detalhes=aberto?`<div class="tipo-detalhes" onclick="event.stopPropagation()"><b>Itens mais vendidos no período</b>${itens.length?itens.map(([nome,qtd])=>`<div class="item-row"><span>${escapeHtml(nome)}</span><strong>${qtd}</strong></div>`).join(''):`<p class="small">Nenhum item encontrado nesse tipo.</p>`}</div>`:'';
+    return `<div class="list-card tipo-card" onclick="toggleTipoResumo(${JSON.stringify(tipo)})"><div><b>${escapeHtml(tipo)} <span class="chevron">${aberto?'▲':'▼'}</span></b><div class="small">${d.qtd} pedido(s)</div>${detalhes}</div><strong>${formatMoney(d.total)}</strong></div>`;
+  }).join(''):`<p class="small">Sem pedidos no período.</p>`;
+}
+
+function dataISOFuncionario(data){
+  if(!data) return '';
+  const s=String(data);
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})/); if(m) return `${m[3]}-${m[2]}-${m[1]}`;
+  return s.slice(0,10);
+}
+function dataPedidoISO(p){ return parseDataPedido(p); }
+function taxaEntregaPedido(p){ return Number(p.taxa_entrega||p.valor_entrega||p.frete||0) || 0; }
+function bonusEntregaPedido(p){
+  const tipo=tipoNormalizado(p);
+  if(tipo.includes('IFOOD') || tipo.includes('99')) return 1;
+  const taxa=taxaEntregaPedido(p);
+  return taxa>0 ? taxa*0.5 : 0;
+}
+function calcularPagamentoPendenteFuncionario(f){
+  const diasTrab=Array.isArray(f.dias_trabalhados)?f.dias_trabalhados.map(dataISOFuncionario):[];
+  const diasPagos=new Set(Array.isArray(f.dias_pagos)?f.dias_pagos.map(dataISOFuncionario):[]);
+  const diasPendentes=diasTrab.filter(d=>d && !diasPagos.has(d));
+  const setPendentes=new Set(diasPendentes);
+  const diaria=Number(f.diaria||0)||0;
+  const bonificacao=Number(f.bonificacao||0)||0;
+  const nome=String(f.nome||'').trim().toUpperCase();
+  let bonusEntregas=0;
+  let entregasPendentes=0;
+  finalizadosCachePy.forEach(p=>{
+    const entregador=String(p.entregador||p.entregador_nome||'').trim().toUpperCase();
+    if(!nome || entregador!==nome) return;
+    const data=dataPedidoISO(p);
+    if(!setPendentes.has(data)) return;
+    const bonus=bonusEntregaPedido(p);
+    if(bonus>0){ bonusEntregas+=bonus; entregasPendentes++; }
+  });
+  const total=(diasPendentes.length*diaria)+bonificacao+bonusEntregas;
+  return {diasPendentes:diasPendentes.length,diaria,bonificacao,bonusEntregas,entregasPendentes,total};
+}
+async function carregarEspelho(force=false){
+  await carregarSistema(force);
+  pyPreparoQtd.textContent=preparoCache.length;
+  pyFuncionariosQtd.textContent=Object.keys(funcionariosCache||{}).length;
+
+  const funcArr=Object.entries(funcionariosCache||{});
+  pyListaFuncionarios.innerHTML=funcArr.length?funcArr.map(([id,f])=>{
+    const pend=calcularPagamentoPendenteFuncionario(f);
+    return `<div class="list-card"><div><b>${escapeHtml(f.nome||"Funcionário")}</b><div class="small">${escapeHtml(f.cargo||"")}</div><div class="small">Diária: ${formatMoney(pend.diaria)} | Bonificação manual: ${formatMoney(pend.bonificacao)}</div><div class="small">Dias pendentes: ${pend.diasPendentes} | Entregas pendentes: ${pend.entregasPendentes}</div><div style="margin-top:6px;font-size:18px;font-weight:900;color:#22c55e">Pagamento pendente: ${formatMoney(pend.total)}</div><div class="small">Bônus entregas pendentes: ${formatMoney(pend.bonusEntregas)}</div></div></div>`;
+  }).join(""):`<p class="small">Nenhum funcionário sincronizado.</p>`;
+
+  calcularRelatorioPeriodo();
+}
 setInterval(()=>{if(!document.getElementById("app").classList.contains("hidden"))atualizarPaginaAtiva(false)},1000);
 </script>
 </body></html>
