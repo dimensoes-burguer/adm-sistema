@@ -227,7 +227,7 @@ main{padding:14px;max-width:980px;margin:0 auto}
       <input type="password" id="senha" placeholder="Digite a senha"/>
     </div>
     <button class="full" onclick="entrar()">Entrar</button>
-    <p class="small">LOGIN ADMINISTRATIVO</p>
+    <p class="small">Senha padrão desta versão: GS1973</p>
   </div>
 </section>
 
@@ -280,10 +280,18 @@ main{padding:14px;max-width:980px;margin:0 auto}
 
     <section id="pedidos" class="page hidden">
       <div class="card">
-        <h2>Pedidos online no Firebase</h2>
-        <p>Mostra pedidos que ainda estão em <code>/pedidos_novos</code>. Quando o Python baixa e apaga, eles somem daqui.</p>
+        <h2>Pedidos</h2>
+        <p><b>Em Preparo</b> vem do espelho do sistema Python em <code>/sistema/em_preparo_lista</code>. <b>Pedidos novos web</b> são apenas os que ainda estão em <code>/pedidos_novos</code>, antes do Python baixar.</p>
         <button onclick="carregarPedidos()">Atualizar pedidos</button>
-        <div id="listaPedidos"></div>
+        <p class="small" id="pedidosSyncInfo">Aguardando sincronização...</p>
+      </div>
+      <div class="card">
+        <h3>Em Preparo / Pronto no sistema</h3>
+        <div id="listaPedidosEmPreparo"></div>
+      </div>
+      <div class="card">
+        <h3>Pedidos novos web ainda não baixados</h3>
+        <div id="listaPedidosNovos"></div>
       </div>
     </section>
 
@@ -347,6 +355,28 @@ main{padding:14px;max-width:980px;margin:0 auto}
       </div>
 
       <div class="card">
+        <h3>Relatório por período</h3>
+        <p class="small">Começa em hoje. Você pode escolher hoje, últimos dias ou um intervalo específico.</p>
+        <div class="grid2">
+          <div class="form-row">
+            <label>De</label>
+            <input type="date" id="relInicio"/>
+          </div>
+          <div class="form-row">
+            <label>Até</label>
+            <input type="date" id="relFim"/>
+          </div>
+        </div>
+        <div class="actions">
+          <button onclick="setPeriodoRelatorio('hoje')">Hoje</button>
+          <button class="secondary" onclick="setPeriodoRelatorio('7')">7 dias</button>
+          <button class="secondary" onclick="setPeriodoRelatorio('30')">30 dias</button>
+          <button class="purple" onclick="calcularRelatorioPeriodo()">Ver período</button>
+        </div>
+        <div id="pyRelatorioPeriodo"></div>
+      </div>
+
+      <div class="card">
         <h3>Pedidos em preparo</h3>
         <div id="pyListaPreparo"></div>
       </div>
@@ -384,6 +414,11 @@ function hojeISO(){
 }
 
 document.getElementById("dataStats").value = hojeISO();
+setTimeout(()=>{
+  const a=document.getElementById("relInicio");
+  const b=document.getElementById("relFim");
+  if(a && b){ a.value=hojeISO(); b.value=hojeISO(); }
+},0);
 
 function entrar(){
   const senha = document.getElementById("senha").value;
@@ -491,38 +526,41 @@ function pedidoTotal(p){
 }
 
 async function carregarPedidos(){
-  const box = document.getElementById("listaPedidos");
+  const boxPrep = document.getElementById("listaPedidosEmPreparo");
+  const boxNovos = document.getElementById("listaPedidosNovos");
+  const info = document.getElementById("pedidosSyncInfo");
   try{
-    const dados = await fbGet("/pedidos_novos") || {};
-    const entradas = Object.entries(dados);
-    document.getElementById("mPedidos").textContent = entradas.length;
-    if(!entradas.length){
-      box.innerHTML = `<p class="small">Nenhum pedido online pendente no Firebase.</p>`;
-      return;
-    }
-    box.innerHTML = entradas.reverse().map(([id,p])=>{
-      const itens = Array.isArray(p.itens) ? p.itens : [];
-      return `<div class="order">
-        <div class="order-top">
-          <div>
-            <h3>${p.nome || "Cliente"}</h3>
-            <span class="badge">${p.tipo || "WEB"}</span>
-            <div class="small">${p.hora || ""}</div>
-          </div>
-          <strong>${formatMoney(pedidoTotal(p))}</strong>
-        </div>
-        <div>${itens.map(i=>`<div class="item-row"><span>${i.nome || i}</span><span>${formatMoney(i.preco || 0)}</span></div>`).join("")}</div>
-        <p class="small"><b>Endereço:</b> ${p.endereco || "-"}</p>
-        <p class="small"><b>Obs:</b> ${p.obs || "-"}</p>
-        ${p.cupom ? `<p class="small"><b>Cupom:</b> ${typeof p.cupom==="string" ? p.cupom : (p.cupom.codigo || "-")} | Desconto: ${formatMoney(p.desconto || p.desconto_cupom || 0)}</p>` : ""}
-        <div class="actions">
-          <button class="yellow" onclick="marcarPedidoVisualizado('${id}')">Marcar visto</button>
-          <button class="red" onclick="apagarPedidoNovo('${id}')">Apagar do Firebase</button>
-        </div>
-      </div>`
-    }).join("");
+    const sistema = await fbGet("/sistema") || {};
+    const preparoListaDireta = await fbGet("/sistema/em_preparo_lista").catch(()=>null);
+    const preparoLista = Array.isArray(preparoListaDireta)
+      ? preparoListaDireta
+      : (Array.isArray(sistema.em_preparo_lista) ? sistema.em_preparo_lista : []);
+    const preparoObj = sistema.em_preparo || {};
+    const prepArr = preparoLista.length
+      ? preparoLista.map((p,i)=>[String(p.id || p.timestamp || i), p]).reverse()
+      : Object.entries(preparoObj).reverse();
+
+    const novos = await fbGet("/pedidos_novos") || {};
+    const novosArr = Object.entries(novos).reverse();
+
+    document.getElementById("mPedidos").textContent = prepArr.length;
+    info.textContent = sistema.ultima_atualizacao
+      ? `Última sincronização do Python: ${sistema.ultima_atualizacao}`
+      : "Ainda sem sincronização do sistema Python. Deixe o sistema aberto no computador.";
+
+    boxPrep.innerHTML = prepArr.length
+      ? prepArr.map(([id,p])=>pedidoCardHtml(id,p,true)).join("")
+      : `<p class="small">Nenhum pedido em preparo sincronizado. Se existe pedido no computador, abra a aba Sistema PY e confira a última sincronização.</p>`;
+
+    boxNovos.innerHTML = novosArr.length
+      ? novosArr.map(([id,p])=>{
+          const card = pedidoCardHtml(id,p,false);
+          return card.replace('</div>', `<div class="actions"><button class="yellow" onclick="marcarPedidoVisualizado('${id}')">Marcar visto</button><button class="red" onclick="apagarPedidoNovo('${id}')">Apagar do Firebase</button></div></div>`);
+        }).join("")
+      : `<p class="small">Nenhum pedido novo pendente em /pedidos_novos. Isso é normal quando o Python já baixou o pedido para Em Preparo.</p>`;
   }catch(e){
-    box.innerHTML = `<p style="color:#fca5a5">Erro ao carregar pedidos: ${e.message}</p>`;
+    boxPrep.innerHTML = `<p style="color:#fca5a5">Erro ao carregar pedidos: ${e.message}</p>`;
+    boxNovos.innerHTML = ``;
   }
 }
 
@@ -673,11 +711,77 @@ function pedidoCardHtml(id,p, mostrarStatus=false){
   </div>`;
 }
 
+
+function parseDataPedido(p){
+  const campos = [p.data, p.data_finalizacao, p.data_pedido, p.timestamp, p.hora];
+  for(const c of campos){
+    if(!c) continue;
+    const s = String(c);
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+    m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    if(m) return `${m[3]}-${m[2]}-${m[1]}`;
+  }
+  // Muitos pedidos antigos só têm hora. Nesse caso, considera hoje para não sumir do relatório diário.
+  return hojeISO();
+}
+
+function dataMenosDias(dias){
+  const d = new Date();
+  d.setDate(d.getDate() - Number(dias || 0));
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+function setPeriodoRelatorio(tipo){
+  const hoje = hojeISO();
+  if(tipo === 'hoje'){
+    document.getElementById('relInicio').value = hoje;
+    document.getElementById('relFim').value = hoje;
+  }else{
+    document.getElementById('relInicio').value = dataMenosDias(Number(tipo)-1);
+    document.getElementById('relFim').value = hoje;
+  }
+  calcularRelatorioPeriodo();
+}
+
+let finalizadosCachePy = [];
+
+function calcularRelatorioPeriodo(){
+  const inicio = document.getElementById('relInicio').value || hojeISO();
+  const fim = document.getElementById('relFim').value || hojeISO();
+  const lista = finalizadosCachePy.filter(p=>{
+    const d = parseDataPedido(p);
+    return d >= inicio && d <= fim;
+  });
+  const porTipo = {};
+  let total = 0;
+  lista.forEach(p=>{
+    const tipo = String(p.tipo || 'OUTROS').toUpperCase();
+    const valor = pedidoTotal(p);
+    total += valor;
+    if(!porTipo[tipo]) porTipo[tipo] = {qtd:0,total:0};
+    porTipo[tipo].qtd += 1;
+    porTipo[tipo].total += valor;
+  });
+  const tiposHtml = Object.entries(porTipo).map(([tipo,d])=>`<div class="list-card"><div><b>${tipo}</b><div class="small">${d.qtd} pedido(s)</div></div><strong>${formatMoney(d.total)}</strong></div>`).join('');
+  document.getElementById('pyRelatorioPeriodo').innerHTML = `
+    <div class="grid2" style="margin-top:12px">
+      <div class="metric"><div class="label">Pedidos no período</div><div class="value">${lista.length}</div></div>
+      <div class="metric"><div class="label">Receita no período</div><div class="value">${formatMoney(total)}</div></div>
+    </div>
+    ${tiposHtml || '<p class="small">Nenhum pedido finalizado nesse período.</p>'}
+  `;
+}
+
 async function carregarEspelho(){
   try{
     const sistema = await fbGet("/sistema") || {};
     const preparoObj = sistema.em_preparo || {};
     const preparoLista = Array.isArray(sistema.em_preparo_lista) ? sistema.em_preparo_lista : [];
+    const finalizadosListaDireta = await fbGet("/sistema/finalizados_lista").catch(()=>null);
     const fin = sistema.finalizados || {};
     const funcs = sistema.funcionarios || {};
     const resumo = sistema.resumo || {};
@@ -696,7 +800,16 @@ async function carregarEspelho(){
       ? prepArr.map(([id,p])=>pedidoCardHtml(id,p,true)).join("")
       : `<p class="small">Nenhum pedido em preparo sincronizado.</p>`;
 
-    const finArr = Object.entries(fin).reverse().slice(0,30);
+    const finArrCompleto = Array.isArray(finalizadosListaDireta) && finalizadosListaDireta.length
+      ? finalizadosListaDireta.map((p,i)=>[String(p.id || p.timestamp || i), p]).reverse()
+      : Object.entries(fin).reverse();
+    finalizadosCachePy = finArrCompleto.map(([id,p])=>p);
+    if(!document.getElementById('relInicio').value){
+      document.getElementById('relInicio').value = hojeISO();
+      document.getElementById('relFim').value = hojeISO();
+    }
+    calcularRelatorioPeriodo();
+    const finArr = finArrCompleto.slice(0,30);
     document.getElementById("pyListaFinalizados").innerHTML = finArr.length
       ? finArr.map(([id,p])=>pedidoCardHtml(id,p,false)).join("")
       : `<p class="small">Nenhum pedido finalizado sincronizado.</p>`;
