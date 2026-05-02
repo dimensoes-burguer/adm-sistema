@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Painel Mobile - Dimensões Burguer</title>
+<style>
+:root{
+  --bg:#07110b;
+  --bg2:#0b1220;
+  --card:#111827;
+  --card2:#162033;
+  --line:#263244;
+  --green:#22c55e;
+  --greenDark:#15803d;
+  --red:#dc2626;
+  --yellow:#facc15;
+  --purple:#7e22ce;
+  --text:#f9fafb;
+  --muted:#9ca3af;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Segoe UI,Arial,sans-serif;
+  background:linear-gradient(135deg,#020617,#07110b 55%,#160329);
+  color:var(--text);
+}
+.hidden{display:none!important}
+#login{
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:20px;
+}
+.login-card{
+  width:min(420px,100%);
+  background:rgba(17,24,39,.94);
+  border:1px solid rgba(34,197,94,.25);
+  border-radius:24px;
+  padding:24px;
+  box-shadow:0 20px 70px rgba(0,0,0,.45);
+}
+.logo{
+  width:68px;height:68px;border-radius:20px;
+  display:grid;place-items:center;
+  background:radial-gradient(circle,#22c55e,#064e3b 60%,#160329);
+  box-shadow:0 0 28px rgba(34,197,94,.4);
+  font-size:34px;
+  margin-bottom:12px;
+}
+h1,h2,h3{margin:0}
+p{color:var(--muted)}
+input,select,textarea{
+  width:100%;
+  background:#0f172a;
+  color:var(--text);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  font-size:15px;
+  outline:none;
+}
+textarea{min-height:80px;resize:vertical}
+button{
+  border:0;
+  border-radius:12px;
+  padding:11px 14px;
+  font-weight:900;
+  cursor:pointer;
+  background:var(--green);
+  color:white;
+}
+button.secondary{background:#334155}
+button.red{background:var(--red)}
+button.yellow{background:#ca8a04}
+button.purple{background:var(--purple)}
+button.full{width:100%}
+.header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:rgba(2,6,23,.96);
+  border-bottom:1px solid var(--line);
+  padding:12px;
+}
+.header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.brand .mini-logo{
+  width:44px;height:44px;border-radius:14px;
+  display:grid;place-items:center;
+  background:radial-gradient(circle,#22c55e,#064e3b 60%,#160329);
+  font-size:24px;
+}
+.brand-title{font-size:16px;font-weight:900}
+.brand-sub{font-size:12px;color:var(--green)}
+.status-pill{
+  padding:8px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.open{background:var(--greenDark)}
+.closed{background:var(--red)}
+.tabs{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding:10px 12px;
+  background:#08130d;
+  border-bottom:1px solid var(--line);
+}
+.tabs button{
+  background:#1f2937;
+  white-space:nowrap;
+  padding:10px 12px;
+}
+.tabs button.active{background:var(--greenDark)}
+main{padding:14px;max-width:980px;margin:0 auto}
+.card{
+  background:rgba(17,24,39,.96);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  margin-bottom:14px;
+  box-shadow:0 12px 30px rgba(0,0,0,.22);
+}
+.grid{display:grid;gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric{
+  background:linear-gradient(135deg,#1e3a8a,#0f172a);
+  border-radius:16px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.08);
+}
+.metric .label{font-size:12px;color:#d1d5db}
+.metric .value{font-size:28px;font-weight:900;margin-top:6px}
+.order{
+  border:1px solid var(--line);
+  background:#0f172a;
+  border-radius:16px;
+  padding:12px;
+  margin-top:10px;
+}
+.order-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+}
+.badge{
+  display:inline-block;
+  padding:5px 8px;
+  border-radius:8px;
+  background:#2563eb;
+  font-size:12px;
+  font-weight:900;
+  margin:4px 0;
+}
+.item-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.small{font-size:12px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.form-row{display:grid;gap:8px;margin-bottom:10px}
+.list-card{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  background:#0f172a;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  margin-top:8px;
+}
+.preview-img{
+  width:72px;height:72px;border-radius:12px;object-fit:cover;background:#0f172a
+}
+.notice{
+  border:1px solid rgba(250,204,21,.35);
+  background:rgba(250,204,21,.08);
+  color:#fef3c7;
+  padding:12px;
+  border-radius:14px;
+  margin-bottom:14px;
+}
+.ok{
+  border:1px solid rgba(34,197,94,.35);
+  background:rgba(34,197,94,.08);
+  color:#dcfce7;
+  padding:12px;
+  border-radius:14px;
+  margin-bottom:14px;
+}
+@media(max-width:640px){
+  .grid2{grid-template-columns:1fr}
+  main{padding:10px}
+  .header-row{align-items:flex-start}
+  .brand-title{font-size:14px}
+}
+</style>
+</head>
+<body>
+
+<section id="login">
+  <div class="login-card">
+    <div class="logo">🍔</div>
+    <h1>Dimensões Burguer</h1>
+    <p>Painel mobile de controle.</p>
+    <div class="form-row">
+      <label>Senha</label>
+      <input type="password" id="senha" placeholder="Digite a senha"/>
+    </div>
+    <button class="full" onclick="entrar()">Entrar</button>
+    <p class="small">Senha padrão desta versão: GS1973</p>
+  </div>
+</section>
+
+<section id="app" class="hidden">
+  <div class="header">
+    <div class="header-row">
+      <div class="brand">
+        <div class="mini-logo">🍔</div>
+        <div>
+          <div class="brand-title">DIMENSÕES BURGUER</div>
+          <div class="brand-sub">Painel Mobile</div>
+        </div>
+      </div>
+      <div id="lojaStatus" class="status-pill closed">LOJA</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="active" onclick="tab('inicio',this)">Início</button>
+    <button onclick="tab('pedidos',this)">Pedidos</button>
+    <button onclick="tab('cardapio',this)">Cardápio</button>
+    <button onclick="tab('cupons',this)">Cupons</button>
+    <button onclick="tab('anuncios',this)">Anúncios</button>
+    <button onclick="tab('stats',this)">Estatísticas</button>
+    <button onclick="tab('espelho',this)">Sistema PY</button>
+  </div>
+
+  <main>
+    <section id="inicio" class="page">
+      <div class="card">
+        <h2>Controle rápido</h2>
+        <p>Abra/feche a loja web e veja um resumo do cardápio online.</p>
+        <div class="grid2">
+          <button id="btnLoja" onclick="alternarLoja()">Carregando loja...</button>
+          <button class="secondary" onclick="carregarTudo()">Atualizar tudo</button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="metric"><div class="label">Pedidos online pendentes</div><div class="value" id="mPedidos">0</div></div>
+        <div class="metric"><div class="label">Itens no cardápio web</div><div class="value" id="mItens">0</div></div>
+        <div class="metric"><div class="label">Cupons ativos</div><div class="value" id="mCupons">0</div></div>
+        <div class="metric"><div class="label">Anúncios ativos</div><div class="value" id="mAnuncios">0</div></div>
+      </div>
+
+      <div class="notice">
+        Para controlar exatamente os pedidos que já foram baixados pelo sistema Python em <b>Em Preparo</b> e <b>Finalizados</b>, o Python precisa espelhar esses dados no Firebase. Esta primeira versão já prepara a tela para isso.
+      </div>
+    </section>
+
+    <section id="pedidos" class="page hidden">
+      <div class="card">
+        <h2>Pedidos online no Firebase</h2>
+        <p>Mostra pedidos que ainda estão em <code>/pedidos_novos</code>. Quando o Python baixa e apaga, eles somem daqui.</p>
+        <button onclick="carregarPedidos()">Atualizar pedidos</button>
+        <div id="listaPedidos"></div>
+      </div>
+    </section>
+
+    <section id="cardapio" class="page hidden">
+      <div class="card">
+        <h2>Cardápio Web</h2>
+        <p>Visualização rápida do cardápio salvo no Firebase. Para edição completa, use o admin atual por enquanto.</p>
+        <div id="listaCardapio"></div>
+      </div>
+    </section>
+
+    <section id="cupons" class="page hidden">
+      <div class="card">
+        <h2>Cupons</h2>
+        <p>Ative/desative cupons rapidamente.</p>
+        <div id="listaCupons"></div>
+      </div>
+    </section>
+
+    <section id="anuncios" class="page hidden">
+      <div class="card">
+        <h2>Anúncios</h2>
+        <p>Ative/desative anúncios e acompanhe cliques.</p>
+        <div id="listaAnuncios"></div>
+      </div>
+    </section>
+
+    <section id="stats" class="page hidden">
+      <div class="card">
+        <h2>Estatísticas de hoje</h2>
+        <div class="form-row">
+          <label>Data</label>
+          <input type="date" id="dataStats"/>
+        </div>
+        <button onclick="carregarStats()">Atualizar estatísticas</button>
+      </div>
+
+      <div class="grid2">
+        <div class="metric"><div class="label">Visitas</div><div class="value" id="sVisitas">0</div></div>
+        <div class="metric"><div class="label">Online agora</div><div class="value" id="sOnline">0</div></div>
+        <div class="metric"><div class="label">Carrinhos</div><div class="value" id="sCarrinhos">0</div></div>
+        <div class="metric"><div class="label">Pedidos</div><div class="value" id="sPedidos">0</div></div>
+        <div class="metric"><div class="label">Cliques anúncios</div><div class="value" id="sCliques">0</div></div>
+        <div class="metric"><div class="label">Cupons usados</div><div class="value" id="sCupons">0</div></div>
+      </div>
+    </section>
+
+    <section id="espelho" class="page hidden">
+      <div class="card">
+        <h2>Sistema Python sincronizado</h2>
+        <p>Mostra uma cópia em tempo quase real do sistema aberto no computador.</p>
+        <button onclick="carregarEspelho()">Atualizar espelho</button>
+        <p class="small" id="ultimaSyncPy">Aguardando sincronização...</p>
+      </div>
+
+      <div class="grid2">
+        <div class="metric"><div class="label">Em Preparo</div><div class="value" id="pyPreparoQtd">0</div></div>
+        <div class="metric"><div class="label">Finalizados</div><div class="value" id="pyFinalizadosQtd">0</div></div>
+        <div class="metric"><div class="label">Funcionários</div><div class="value" id="pyFuncionariosQtd">0</div></div>
+        <div class="metric"><div class="label">Receita total</div><div class="value" id="pyReceitaTotal">R$ 0,00</div></div>
+      </div>
+
+      <div class="card">
+        <h3>Pedidos em preparo</h3>
+        <div id="pyListaPreparo"></div>
+      </div>
+
+      <div class="card">
+        <h3>Pedidos finalizados</h3>
+        <div id="pyListaFinalizados"></div>
+      </div>
+
+      <div class="card">
+        <h3>Funcionários</h3>
+        <div id="pyListaFuncionarios"></div>
+      </div>
+
+      <div class="card">
+        <h3>Resumo por tipo</h3>
+        <div id="pyResumoTipos"></div>
+      </div>
+    </section>
+  </main>
+</section>
+
+<script>
+const FIREBASE_URL = "https://dimensoesburguer-85c0f-default-rtdb.firebaseio.com";
+const SENHA = "GS1973";
+
+let lojaAberta = false;
+
+function hojeISO(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+document.getElementById("dataStats").value = hojeISO();
+
+function entrar(){
+  const senha = document.getElementById("senha").value;
+  if(senha !== SENHA){
+    alert("Senha incorreta.");
+    return;
+  }
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  carregarTudo();
+}
+
+function tab(id, btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  if(id==="pedidos") carregarPedidos();
+  if(id==="cardapio") carregarCardapio();
+  if(id==="cupons") carregarCupons();
+  if(id==="anuncios") carregarAnuncios();
+  if(id==="stats") carregarStats();
+  if(id==="espelho") carregarEspelho();
+}
+
+async function fbGet(path){
+  const r = await fetch(`${FIREBASE_URL}${path}.json?t=${Date.now()}`);
+  if(!r.ok) throw new Error("Erro Firebase GET " + path);
+  return await r.json();
+}
+
+async function fbPut(path, data){
+  const r = await fetch(`${FIREBASE_URL}${path}.json`, {
+    method:"PUT",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  });
+  if(!r.ok) throw new Error("Erro Firebase PUT " + path);
+  return await r.json();
+}
+
+async function fbPatch(path, data){
+  const r = await fetch(`${FIREBASE_URL}${path}.json`, {
+    method:"PATCH",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  });
+  if(!r.ok) throw new Error("Erro Firebase PATCH " + path);
+  return await r.json();
+}
+
+async function fbDelete(path){
+  const r = await fetch(`${FIREBASE_URL}${path}.json`, {method:"DELETE"});
+  if(!r.ok) throw new Error("Erro Firebase DELETE " + path);
+  return await r.json();
+}
+
+async function carregarTudo(){
+  await carregarLoja();
+  carregarPedidos();
+  carregarCardapio();
+  carregarCupons();
+  carregarAnuncios();
+  carregarStats();
+}
+
+async function carregarLoja(){
+  try{
+    lojaAberta = !!(await fbGet("/config/loja_aberta"));
+    const pill = document.getElementById("lojaStatus");
+    const btn = document.getElementById("btnLoja");
+    if(lojaAberta){
+      pill.textContent = "LOJA WEB: ABERTA";
+      pill.className = "status-pill open";
+      btn.textContent = "Fechar loja web";
+      btn.className = "red full";
+    }else{
+      pill.textContent = "LOJA WEB: FECHADA";
+      pill.className = "status-pill closed";
+      btn.textContent = "Abrir loja web";
+      btn.className = "full";
+    }
+  }catch(e){
+    console.error(e);
+    document.getElementById("btnLoja").textContent = "Erro ao carregar loja";
+  }
+}
+
+async function alternarLoja(){
+  try{
+    await fbPut("/config/loja_aberta", !lojaAberta);
+    await carregarLoja();
+  }catch(e){
+    alert("Erro ao alterar loja: " + e.message);
+  }
+}
+
+function formatMoney(v){
+  const n = Number(v || 0);
+  return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+}
+
+function pedidoTotal(p){
+  return Number(p.total ?? p.valor_cobrado ?? 0);
+}
+
+async function carregarPedidos(){
+  const box = document.getElementById("listaPedidos");
+  try{
+    const dados = await fbGet("/pedidos_novos") || {};
+    const entradas = Object.entries(dados);
+    document.getElementById("mPedidos").textContent = entradas.length;
+    if(!entradas.length){
+      box.innerHTML = `<p class="small">Nenhum pedido online pendente no Firebase.</p>`;
+      return;
+    }
+    box.innerHTML = entradas.reverse().map(([id,p])=>{
+      const itens = Array.isArray(p.itens) ? p.itens : [];
+      return `<div class="order">
+        <div class="order-top">
+          <div>
+            <h3>${p.nome || "Cliente"}</h3>
+            <span class="badge">${p.tipo || "WEB"}</span>
+            <div class="small">${p.hora || ""}</div>
+          </div>
+          <strong>${formatMoney(pedidoTotal(p))}</strong>
+        </div>
+        <div>${itens.map(i=>`<div class="item-row"><span>${i.nome || i}</span><span>${formatMoney(i.preco || 0)}</span></div>`).join("")}</div>
+        <p class="small"><b>Endereço:</b> ${p.endereco || "-"}</p>
+        <p class="small"><b>Obs:</b> ${p.obs || "-"}</p>
+        ${p.cupom ? `<p class="small"><b>Cupom:</b> ${typeof p.cupom==="string" ? p.cupom : (p.cupom.codigo || "-")} | Desconto: ${formatMoney(p.desconto || p.desconto_cupom || 0)}</p>` : ""}
+        <div class="actions">
+          <button class="yellow" onclick="marcarPedidoVisualizado('${id}')">Marcar visto</button>
+          <button class="red" onclick="apagarPedidoNovo('${id}')">Apagar do Firebase</button>
+        </div>
+      </div>`
+    }).join("");
+  }catch(e){
+    box.innerHTML = `<p style="color:#fca5a5">Erro ao carregar pedidos: ${e.message}</p>`;
+  }
+}
+
+async function marcarPedidoVisualizado(id){
+  await fbPatch(`/pedidos_novos/${id}`, {visualizado_mobile:true});
+  carregarPedidos();
+}
+
+async function apagarPedidoNovo(id){
+  if(!confirm("Apagar este pedido de /pedidos_novos? Use com cuidado.")) return;
+  await fbDelete(`/pedidos_novos/${id}`);
+  carregarPedidos();
+}
+
+async function carregarCardapio(){
+  const box = document.getElementById("listaCardapio");
+  try{
+    const dados = await fbGet("/cardapio_web") || await fbGet("/cardapio") || {};
+    let total = 0;
+    let html = "";
+    Object.entries(dados).forEach(([cat, itens])=>{
+      if(!Array.isArray(itens)) return;
+      total += itens.length;
+      html += `<div class="card"><h3>${cat}</h3>`;
+      itens.slice(0,20).forEach(item=>{
+        html += `<div class="list-card">
+          <div>
+            <b>${item.nome || "Item"}</b>
+            <div class="small">${formatMoney(item.preco || 0)}</div>
+          </div>
+          ${item.imagem ? `<img class="preview-img" src="${item.imagem}">` : ""}
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    document.getElementById("mItens").textContent = total;
+    box.innerHTML = html || `<p class="small">Não encontrei cardápio em /cardapio_web.</p>`;
+  }catch(e){
+    box.innerHTML = `<p style="color:#fca5a5">Erro ao carregar cardápio: ${e.message}</p>`;
+  }
+}
+
+async function carregarCupons(){
+  const box = document.getElementById("listaCupons");
+  try{
+    const dados = await fbGet("/cupons") || {};
+    const entradas = Object.entries(dados);
+    const ativos = entradas.filter(([_,c])=>c.ativo !== false).length;
+    document.getElementById("mCupons").textContent = ativos;
+    if(!entradas.length){
+      box.innerHTML = `<p class="small">Nenhum cupom cadastrado.</p>`;
+      return;
+    }
+    box.innerHTML = entradas.map(([id,c])=>`
+      <div class="list-card">
+        <div>
+          <b>${c.codigo || id}</b>
+          <div class="small">${c.nome || ""}</div>
+          <div class="small">Usos: ${c.usos_usados || 0}/${c.usos_maximos || "-"}</div>
+          <div class="small">Desconto: ${c.tipo === "percentual" ? (c.valor || 0)+"%" : formatMoney(c.valor || 0)}</div>
+        </div>
+        <button class="${c.ativo === false ? "" : "red"}" onclick="toggleCupom('${id}', ${c.ativo === false})">${c.ativo === false ? "Ativar" : "Desativar"}</button>
+      </div>
+    `).join("");
+  }catch(e){
+    box.innerHTML = `<p style="color:#fca5a5">Erro ao carregar cupons: ${e.message}</p>`;
+  }
+}
+
+async function toggleCupom(id, ativar){
+  await fbPatch(`/cupons/${id}`, {ativo: ativar});
+  carregarCupons();
+}
+
+async function carregarAnuncios(){
+  const box = document.getElementById("listaAnuncios");
+  try{
+    const dados = await fbGet("/anuncios") || {};
+    const entradas = Object.entries(dados);
+    const ativos = entradas.filter(([_,a])=>a.ativo !== false).length;
+    document.getElementById("mAnuncios").textContent = ativos;
+    if(!entradas.length){
+      box.innerHTML = `<p class="small">Nenhum anúncio cadastrado.</p>`;
+      return;
+    }
+    box.innerHTML = entradas.map(([id,a])=>`
+      <div class="list-card">
+        <div style="display:flex;gap:10px;align-items:center">
+          ${a.imagem ? `<img class="preview-img" src="${a.imagem}">` : ""}
+          <div>
+            <b>${a.titulo || "Anúncio"}</b>
+            <div class="small">Cliques: ${a.cliques || 0}</div>
+            <div class="small">${a.acao || ""}</div>
+          </div>
+        </div>
+        <button class="${a.ativo === false ? "" : "red"}" onclick="toggleAnuncio('${id}', ${a.ativo === false})">${a.ativo === false ? "Ativar" : "Desativar"}</button>
+      </div>
+    `).join("");
+  }catch(e){
+    box.innerHTML = `<p style="color:#fca5a5">Erro ao carregar anúncios: ${e.message}</p>`;
+  }
+}
+
+async function toggleAnuncio(id, ativar){
+  await fbPatch(`/anuncios/${id}`, {ativo: ativar});
+  carregarAnuncios();
+}
+
+async function carregarStats(){
+  const date = document.getElementById("dataStats").value || hojeISO();
+  try{
+    const stats = await fbGet(`/analytics/dias/${date}`) || {};
+    const online = await fbGet("/analytics/online") || {};
+    const agora = Date.now();
+    const onlineCount = Object.values(online).filter(u=>{
+      const t = Number(u.ultimo_ativo || u.lastSeen || 0);
+      return agora - t < 65000;
+    }).length;
+    document.getElementById("sVisitas").textContent = stats.visitas || 0;
+    document.getElementById("sOnline").textContent = onlineCount;
+    document.getElementById("sCarrinhos").textContent = stats.carrinhos_iniciados || 0;
+    document.getElementById("sPedidos").textContent = stats.pedidos_confirmados || 0;
+    document.getElementById("sCliques").textContent = stats.cliques_anuncios || 0;
+    document.getElementById("sCupons").textContent = stats.cupons_usados || 0;
+  }catch(e){
+    console.error(e);
+  }
+}
+
+function pedidoCardHtml(id,p, mostrarStatus=false){
+  const itens = Array.isArray(p.itens) ? p.itens : [];
+  const cupom = p.cupom ? (typeof p.cupom === "string" ? p.cupom : (p.cupom.codigo || "-")) : "";
+  return `<div class="order">
+    <div class="order-top">
+      <div>
+        <h3>${p.nome || "Cliente"}</h3>
+        <span class="badge">${p.tipo || "PEDIDO"}</span>
+        ${mostrarStatus ? `<span class="badge" style="background:${p.status === 'PRONTO' ? '#16a34a' : '#2563eb'}">${p.status || "EM PREPARO"}</span>` : ""}
+        <div class="small">${p.hora || ""} ${p.data || ""}</div>
+      </div>
+      <strong>${formatMoney(pedidoTotal(p))}</strong>
+    </div>
+    <div>${itens.map(i=>`<div class="item-row"><span>${i.nome || i}</span><span>${formatMoney(i.preco || 0)}</span></div>`).join("")}</div>
+    ${p.entregador ? `<p class="small"><b>Entregador:</b> ${p.entregador}</p>` : ""}
+    ${p.endereco ? `<p class="small"><b>Endereço:</b> ${p.endereco}</p>` : ""}
+    ${p.obs ? `<p class="small"><b>Obs:</b> ${p.obs}</p>` : ""}
+    ${cupom ? `<p class="small"><b>Cupom:</b> ${cupom} | Desconto: ${formatMoney(p.desconto || p.desconto_cupom || 0)}</p>` : ""}
+  </div>`;
+}
+
+async function carregarEspelho(){
+  try{
+    const sistema = await fbGet("/sistema") || {};
+    const preparo = sistema.em_preparo || {};
+    const fin = sistema.finalizados || {};
+    const funcs = sistema.funcionarios || {};
+    const resumo = sistema.resumo || {};
+
+    document.getElementById("ultimaSyncPy").textContent = sistema.ultima_atualizacao ? `Última atualização: ${sistema.ultima_atualizacao}` : "Ainda sem atualização do sistema Python.";
+    document.getElementById("pyPreparoQtd").textContent = Object.keys(preparo).length;
+    document.getElementById("pyFinalizadosQtd").textContent = Object.keys(fin).length;
+    document.getElementById("pyFuncionariosQtd").textContent = Object.keys(funcs).length;
+    document.getElementById("pyReceitaTotal").textContent = formatMoney(resumo.receita_total || 0);
+
+    const prepArr = Object.entries(preparo).reverse();
+    document.getElementById("pyListaPreparo").innerHTML = prepArr.length
+      ? prepArr.map(([id,p])=>pedidoCardHtml(id,p,true)).join("")
+      : `<p class="small">Nenhum pedido em preparo sincronizado.</p>`;
+
+    const finArr = Object.entries(fin).reverse().slice(0,30);
+    document.getElementById("pyListaFinalizados").innerHTML = finArr.length
+      ? finArr.map(([id,p])=>pedidoCardHtml(id,p,false)).join("")
+      : `<p class="small">Nenhum pedido finalizado sincronizado.</p>`;
+
+    const funcArr = Object.entries(funcs);
+    document.getElementById("pyListaFuncionarios").innerHTML = funcArr.length
+      ? funcArr.map(([id,f])=>`<div class="list-card"><div><b>${f.nome || "Funcionário"}</b><div class="small">${f.cargo || ""}</div><div class="small">Diária: ${formatMoney(f.diaria || 0)} | Bonificação: ${formatMoney(f.bonificacao || 0)}</div></div></div>`).join("")
+      : `<p class="small">Nenhum funcionário sincronizado.</p>`;
+
+    const tipos = resumo.por_tipo || {};
+    const tiposArr = Object.entries(tipos);
+    document.getElementById("pyResumoTipos").innerHTML = tiposArr.length
+      ? tiposArr.map(([tipo,d])=>`<div class="list-card"><div><b>${tipo}</b><div class="small">Pedidos: ${d.qtd || 0}</div></div><strong>${formatMoney(d.receita || 0)}</strong></div>`).join("")
+      : `<p class="small">Sem resumo por tipo ainda.</p>`;
+  }catch(e){
+    document.getElementById("ultimaSyncPy").textContent = "Ainda não existe espelho do sistema Python no Firebase.";
+    document.getElementById("pyListaPreparo").innerHTML = `<p class="small">Abra o sistema Python atualizado no computador para começar a sincronizar.</p>`;
+  }
+}
+
+setInterval(()=>{
+  if(!document.getElementById("app").classList.contains("hidden")){
+    carregarLoja();
+    carregarStats();
+    if(!document.getElementById("espelho").classList.contains("hidden")) carregarEspelho();
+  }
+}, 30000);
+</script>
+</body>
+</html>
