@@ -139,6 +139,156 @@ async function carregarEspelho(force=false){
 
   calcularRelatorioPeriodo();
 }
-setInterval(()=>{if(!document.getElementById("app").classList.contains("hidden"))atualizarPaginaAtiva(false)},1000);
+
+async function carregarCardapio(force=false){
+  const box=document.getElementById("listaCardapio");
+  if(!box) return;
+  try{
+    let dados=await fbGet("/cardapio_web").catch(()=>null);
+    if(!dados) dados=await fbGet("/cardapio").catch(()=>null);
+    dados=dados||{};
+    let html="";
+    let totalItens=0;
+    Object.entries(dados).forEach(([cat,itens])=>{
+      if(!Array.isArray(itens)) return;
+      totalItens+=itens.length;
+      html+=`<div class="card"><h3>${escapeHtml(cat)}</h3>`;
+      itens.forEach(item=>{
+        const nome=escapeHtml(item.nome||item.item||"Item");
+        const preco=formatMoney(item.preco||0);
+        const img=item.imagem||item.foto||item.image||"";
+        html+=`<div class="list-card"><div><b>${nome}</b><div class="small">${preco}</div>${item.descricao?`<div class="small">${escapeHtml(item.descricao)}</div>`:""}</div>${img?`<img class="preview-img" src="${img}">`:""}</div>`;
+      });
+      html+=`</div>`;
+    });
+    box.innerHTML=html||`<p class="small">Nenhum item encontrado no cardápio web.</p>`;
+  }catch(e){
+    box.innerHTML=`<p style="color:#fca5a5">Erro ao carregar cardápio: ${e.message}</p>`;
+  }
+}
+
+async function carregarCupons(force=false){
+  const box=document.getElementById("listaCupons");
+  if(!box) return;
+  try{
+    const dados=await fbGet("/cupons")||{};
+    const entradas=Object.entries(dados).sort((a,b)=>String(a[1].codigo||a[0]).localeCompare(String(b[1].codigo||b[0])));
+    const ativos=entradas.filter(([id,c])=>c.ativo!==false).length;
+    if(document.getElementById("mCupons")) document.getElementById("mCupons").textContent=ativos;
+    box.innerHTML=entradas.length?entradas.map(([id,c])=>{
+      const ativo=c.ativo!==false;
+      const tipo=c.tipo==="percentual"?"%":"R$";
+      const desconto=c.tipo==="percentual"?`${Number(c.valor||0)}%`:formatMoney(c.valor||0);
+      return `<div class="list-card">
+        <div>
+          <b>${escapeHtml(c.codigo||id)}</b>
+          <div class="small">${escapeHtml(c.nome||"")}</div>
+          <div class="small">Desconto: ${desconto} | Mínimo: ${formatMoney(c.valor_minimo||0)}</div>
+          <div class="small">Usos: ${c.usos_usados||0}/${c.usos_maximos||"-"} | ${ativo?"Ativo":"Desativado"}</div>
+        </div>
+        <button class="${ativo?"red":""}" onclick="toggleCupom('${id}', ${!ativo})">${ativo?"Desativar":"Ativar"}</button>
+      </div>`;
+    }).join(""):`<p class="small">Nenhum cupom cadastrado.</p>`;
+  }catch(e){
+    box.innerHTML=`<p style="color:#fca5a5">Erro ao carregar cupons: ${e.message}</p>`;
+  }
+}
+
+async function toggleCupom(id,ativar){
+  try{
+    await fbPatch(`/cupons/${id}`,{ativo:!!ativar});
+    await carregarCupons(true);
+  }catch(e){ alert("Erro ao alterar cupom: "+e.message); }
+}
+
+async function carregarAnuncios(force=false){
+  const box=document.getElementById("listaAnuncios");
+  if(!box) return;
+  try{
+    const dados=await fbGet("/anuncios")||{};
+    const entradas=Object.entries(dados).sort((a,b)=>Number(a[1].ordem||999)-Number(b[1].ordem||999));
+    const ativos=entradas.filter(([id,a])=>a.ativo!==false).length;
+    if(document.getElementById("mAnuncios")) document.getElementById("mAnuncios").textContent=ativos;
+    box.innerHTML=entradas.length?entradas.map(([id,a])=>{
+      const ativo=a.ativo!==false;
+      const img=a.imagem||a.foto||a.image||"";
+      return `<div class="list-card">
+        <div style="display:flex;gap:10px;align-items:center">
+          ${img?`<img class="preview-img" src="${img}">`:""}
+          <div>
+            <b>${escapeHtml(a.titulo||"Anúncio")}</b>
+            <div class="small">${ativo?"Ativo":"Desativado"} | Cliques: ${a.cliques||0}</div>
+            <div class="small">${escapeHtml(a.acao||a.tipo_acao||"")}</div>
+          </div>
+        </div>
+        <button class="${ativo?"red":""}" onclick="toggleAnuncio('${id}', ${!ativo})">${ativo?"Desativar":"Ativar"}</button>
+      </div>`;
+    }).join(""):`<p class="small">Nenhum anúncio cadastrado.</p>`;
+  }catch(e){
+    box.innerHTML=`<p style="color:#fca5a5">Erro ao carregar anúncios: ${e.message}</p>`;
+  }
+}
+
+async function toggleAnuncio(id,ativar){
+  try{
+    await fbPatch(`/anuncios/${id}`,{ativo:!!ativar});
+    await carregarAnuncios(true);
+  }catch(e){ alert("Erro ao alterar anúncio: "+e.message); }
+}
+
+async function carregarStats(force=false){
+  const data=(document.getElementById("dataStats")?.value)||hojeISO();
+  try{
+    const stats=await fbGet(`/analytics/dias/${data}`).catch(()=>({}))||{};
+    const online=await fbGet("/analytics/online").catch(()=>({}))||{};
+    const agora=Date.now();
+    const onlineCount=Object.values(online).filter(u=>{
+      const t=Number(u.ultimo_ativo||u.lastSeen||u.ultimoAcesso||0);
+      return t && (agora-t<65000);
+    }).length;
+    if(document.getElementById("sVisitas")) sVisitas.textContent=stats.visitas||0;
+    if(document.getElementById("sOnline")) sOnline.textContent=onlineCount;
+    if(document.getElementById("sCarrinhos")) sCarrinhos.textContent=stats.carrinhos_iniciados||0;
+    if(document.getElementById("sPedidos")) sPedidos.textContent=stats.pedidos_confirmados||0;
+    if(document.getElementById("sCliques")) sCliques.textContent=stats.cliques_anuncios||0;
+    if(document.getElementById("sCupons")) sCupons.textContent=stats.cupons_usados||0;
+  }catch(e){ console.error("Erro stats",e); }
+}
+
+async function atualizarPaginaAtiva(force=false){
+  if(atualizando && !force) return;
+  atualizando=true;
+  try{
+    if(paginaAtiva==="pedidos"){
+      await carregarPedidos(force);
+    }else if(paginaAtiva==="finalizados"){
+      await carregarSistema(force);
+      renderFinalizados();
+    }else if(paginaAtiva==="cupons"){
+      await carregarCupons(force);
+    }else if(paginaAtiva==="anuncios"){
+      await carregarAnuncios(force);
+    }else if(force && paginaAtiva==="cardapio"){
+      await carregarCardapio(force);
+    }else if(force && paginaAtiva==="stats"){
+      await carregarStats(force);
+    }else if(force && paginaAtiva==="espelho"){
+      await carregarEspelho(force);
+    }else if(force && paginaAtiva==="inicio"){
+      await carregarTudo(force);
+    }
+  }catch(e){
+    console.error("Erro ao atualizar página ativa", e);
+  }finally{
+    atualizando=false;
+  }
+}
+
+setInterval(()=>{
+  if(document.getElementById("app").classList.contains("hidden")) return;
+  if(["pedidos","finalizados","cupons","anuncios"].includes(paginaAtiva)){
+    atualizarPaginaAtiva(false);
+  }
+},1000);
 </script>
 </body></html>
