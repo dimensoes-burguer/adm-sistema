@@ -31,7 +31,8 @@ document.getElementById("dataStats").value=hojeISO();document.getElementById("re
 function entrar(){if(document.getElementById("senha").value!==SENHA){alert("Senha incorreta.");return}document.getElementById("login").classList.add("hidden");document.getElementById("app").classList.remove("hidden");carregarTudo(true)}
 function tab(id,btn){paginaAtiva=id;document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");atualizarPaginaAtiva(true)}
 async function fbGet(path){const r=await fetch(`${FIREBASE_URL}${path}.json?t=${Date.now()}`);if(!r.ok)throw new Error("Erro Firebase GET "+path);return await r.json()}async function fbPut(path,data){const r=await fetch(`${FIREBASE_URL}${path}.json`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});if(!r.ok)throw new Error("Erro Firebase PUT "+path);return await r.json()}async function fbPatch(path,data){const r=await fetch(`${FIREBASE_URL}${path}.json`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});if(!r.ok)throw new Error("Erro Firebase PATCH "+path);return await r.json()}async function fbDelete(path){const r=await fetch(`${FIREBASE_URL}${path}.json`,{method:"DELETE"});if(!r.ok)throw new Error("Erro Firebase DELETE "+path);return await r.json()}
-function formatMoney(v){const n=Number(v||0);return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}function pedidoTotal(p){return Number(p.valor_cobrado??p.total_liquido??p.total_final??p.total??0)}function tipoNormalizado(p){return String(p.tipo||"").toUpperCase().trim()}function classeTipo(p){const t=tipoNormalizado(p);if(t.includes("IFOOD"))return "ifood";if(t.includes("99"))return "food99";return ""}function badgeTipo(p){const cls=classeTipo(p);return `<span class="badge ${cls}">${p.tipo||"PEDIDO"}</span>`}
+function formatMoney(v){const n=Number(v||0);return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}function pedidoTotal(p){return Number(p.valor_cobrado??p.total_liquido??p.total_final??p.total??0)}
+function pedidoLiquido(p){const total=pedidoTotal(p); if(p.receita_liquida!==undefined)return Number(p.receita_liquida||0); if(p.lucro_liquido!==undefined)return Number(p.lucro_liquido||0); return total-Number(p.custo_estimado||0);}function tipoNormalizado(p){return String(p.tipo||"").toUpperCase().trim()}function classeTipo(p){const t=tipoNormalizado(p);if(t.includes("IFOOD"))return "ifood";if(t.includes("99"))return "food99";return ""}function badgeTipo(p){const cls=classeTipo(p);return `<span class="badge ${cls}">${p.tipo||"PEDIDO"}</span>`}
 async function carregarTudo(force=false){await Promise.allSettled([carregarLoja(),carregarSistema(force),carregarCupons(),carregarAnuncios(),carregarStats()]);atualizarInicio()}
 async function carregarSistema(force=false){try{const sistema=await fbGet("/sistema")||{};sistemaCache=sistema;const prep=await fbGet("/sistema/em_preparo_lista").catch(()=>null);preparoCache=Array.isArray(prep)?prep:(Array.isArray(sistema.em_preparo_lista)?sistema.em_preparo_lista:Object.values(sistema.em_preparo||{}));const fin=await fbGet("/sistema/finalizados_lista").catch(()=>null);finalizadosCachePy=Array.isArray(fin)?fin:(Array.isArray(sistema.finalizados_lista)?sistema.finalizados_lista:Object.values(sistema.finalizados||{}));funcionariosCache=sistema.funcionarios||{};document.getElementById("ultimaSyncPy").textContent=sistema.ultima_atualizacao?`Última atualização: ${sistema.ultima_atualizacao}`:"Ainda sem atualização do sistema Python."}catch(e){console.error(e)}}
 async function carregarLoja(){try{lojaAberta=!!(await fbGet("/config/loja_aberta"));const pill=document.getElementById("lojaStatus"),btn=document.getElementById("btnLoja");if(lojaAberta){pill.textContent="LOJA WEB: ABERTA";pill.className="status-pill open";btn.textContent="Fechar loja web";btn.className="red full"}else{pill.textContent="LOJA WEB: FECHADA";pill.className="status-pill closed";btn.textContent="Abrir loja web";btn.className="full"}}catch(e){console.error(e)}}async function alternarLoja(){try{await fbPut("/config/loja_aberta",!lojaAberta);await carregarLoja()}catch(e){alert("Erro ao alterar loja: "+e.message)}}
@@ -62,11 +63,14 @@ function calcularRelatorioPeriodo(){
   const lista=filtrarFinalizados(inicio,fim);
   const porTipo={};
   let total=0;
+  let liquido=0;
 
   lista.forEach(p=>{
     const tipo=(tipoNormalizado(p)||'OUTROS').trim() || 'OUTROS';
     const val=pedidoTotal(p);
+    const liq=pedidoLiquido(p);
     total+=val;
+    liquido+=liq;
     if(!porTipo[tipo]) porTipo[tipo]={qtd:0,total:0,itens:{}};
     porTipo[tipo].qtd++;
     porTipo[tipo].total+=val;
@@ -79,7 +83,7 @@ function calcularRelatorioPeriodo(){
     });
   });
 
-  pyRelatorioPeriodo.innerHTML=`<div class="grid2" style="margin-top:12px"><div class="metric"><div class="label">Pedidos no período</div><div class="value">${lista.length}</div></div><div class="metric"><div class="label">Receita no período</div><div class="value">${formatMoney(total)}</div></div></div>`;
+  pyRelatorioPeriodo.innerHTML=`<div class="grid2" style="margin-top:12px"><div class="metric"><div class="label">Pedidos no período</div><div class="value">${lista.length}</div></div><div class="metric"><div class="label">Receita total no período</div><div class="value">${formatMoney(total)}</div><div class="small" style="margin-top:8px;color:#bbf7d0">Receita líquida: <b>${formatMoney(liquido)}</b></div></div></div>`;
 
   const tipos=Object.entries(porTipo).sort((a,b)=>b[1].total-a[1].total);
   pyResumoTipos.innerHTML=tipos.length?tipos.map(([tipo,d])=>{
