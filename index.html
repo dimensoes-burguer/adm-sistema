@@ -20,14 +20,14 @@
 <section id="cardapio" class="page hidden"><div class="card"><h2>Cardápio Web</h2><p>Visualização rápida do cardápio salvo no Firebase.</p><div id="listaCardapio"></div></div></section>
 <section id="cupons" class="page hidden"><div class="card"><h2>Cupons</h2><p>Ative/desative cupons rapidamente.</p><div id="listaCupons"></div></div></section>
 <section id="anuncios" class="page hidden"><div class="card"><h2>Anúncios</h2><p>Ative/desative anúncios e acompanhe cliques.</p><div id="listaAnuncios"></div></div></section>
-<section id="stats" class="page hidden"><div class="card"><h2>Estatísticas de hoje</h2><div class="form-row"><label>Data</label><input type="date" id="dataStats"/></div><button onclick="carregarStats(true)">Atualizar estatísticas</button></div><div class="grid2"><div class="metric"><div class="label">Visitas</div><div class="value" id="sVisitas">0</div></div><div class="metric"><div class="label">Online agora</div><div class="value" id="sOnline">0</div></div><div class="metric"><div class="label">Carrinhos</div><div class="value" id="sCarrinhos">0</div></div><div class="metric"><div class="label">Pedidos</div><div class="value" id="sPedidos">0</div></div><div class="metric"><div class="label">Cliques anúncios</div><div class="value" id="sCliques">0</div></div><div class="metric"><div class="label">Cupons usados</div><div class="value" id="sCupons">0</div></div></div></section>
+<section id="stats" class="page hidden"><div class="card"><h2>Estatísticas</h2><p>Veja os acessos e conversões do cardápio web. Começa em hoje, mas você pode escolher um intervalo.</p><div class="grid2"><div class="form-row"><label>De</label><input type="date" id="statsInicio"/></div><div class="form-row"><label>Até</label><input type="date" id="statsFim"/></div></div><div class="actions"><button onclick="setPeriodoStats('hoje')">Hoje</button><button class="secondary" onclick="setPeriodoStats('7')">7 dias</button><button class="secondary" onclick="setPeriodoStats('30')">30 dias</button><button class="purple" onclick="carregarStats(true)">Ver período</button></div><p class="small" id="statsInfo">Aguardando dados...</p></div><div class="grid2"><div class="metric"><div class="label">Visitas</div><div class="value" id="sVisitas">0</div></div><div class="metric"><div class="label">Online agora</div><div class="value" id="sOnline">0</div></div><div class="metric"><div class="label">Carrinhos iniciados</div><div class="value" id="sCarrinhos">0</div></div><div class="metric"><div class="label">Itens adicionados</div><div class="value" id="sItensAdd">0</div></div><div class="metric"><div class="label">Finalizações abertas</div><div class="value" id="sCheckouts">0</div></div><div class="metric"><div class="label">Pedidos confirmados</div><div class="value" id="sPedidos">0</div></div><div class="metric"><div class="label">Cliques anúncios</div><div class="value" id="sCliques">0</div></div><div class="metric"><div class="label">Cupons usados</div><div class="value" id="sCupons">0</div></div></div><div class="card"><h3>Conversão do período</h3><div class="grid2"><div class="metric"><div class="label">Visitas → Pedidos</div><div class="value" id="sConvVisitas">0%</div></div><div class="metric"><div class="label">Carrinhos → Pedidos</div><div class="value" id="sConvCarrinhos">0%</div></div></div></div></section>
 <section id="espelho" class="page hidden"><div class="card"><h2>Sistema Python sincronizado</h2><p>Resumo em tempo quase real do sistema aberto no computador.</p><button onclick="carregarEspelho(true)">Atualizar espelho</button><p class="small" id="ultimaSyncPy">Aguardando sincronização...</p></div><div class="grid2"><div class="metric"><div class="label">Em Preparo</div><div class="value" id="pyPreparoQtd">0</div></div><div class="metric"><div class="label">Funcionários</div><div class="value" id="pyFuncionariosQtd">0</div></div></div><div class="card"><h3>Relatório por período</h3><p class="small">Começa em hoje. Use o filtro abaixo para ver receita e tipos no período.</p><div class="grid2"><div class="form-row"><label>De</label><input type="date" id="relInicio"></div><div class="form-row"><label>Até</label><input type="date" id="relFim"></div></div><div class="actions"><button onclick="setPeriodoRelatorio('hoje')">Hoje</button><button class="secondary" onclick="setPeriodoRelatorio('7')">7 dias</button><button class="secondary" onclick="setPeriodoRelatorio('30')">30 dias</button><button class="purple" onclick="calcularRelatorioPeriodo()">Ver período</button></div><div id="pyRelatorioPeriodo"></div></div><div class="card"><h3>Funcionários</h3><div id="pyListaFuncionarios"></div></div><div class="card"><h3>Resumo por tipo do período</h3><p class="small">Clique em um tipo para ver os itens mais vendidos no período.</p><div id="pyResumoTipos"></div></div></section>
 </main></section>
 <script>
 const FIREBASE_URL="https://dimensoesburguer-85c0f-default-rtdb.firebaseio.com";const SENHA="GS1973";let lojaAberta=false;let paginaAtiva="inicio";let atualizando=false;let sistemaCache={};let preparoCache=[];let finalizadosCachePy=[];let funcionariosCache={};let tiposExpandidos={};
 function hojeISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function dataMenosDias(dias){const d=new Date();d.setDate(d.getDate()-Number(dias||0));return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-document.getElementById("dataStats").value=hojeISO();document.getElementById("relInicio").value=hojeISO();document.getElementById("relFim").value=hojeISO();document.getElementById("finInicio").value=hojeISO();document.getElementById("finFim").value=hojeISO();
+document.getElementById("statsInicio").value=hojeISO();document.getElementById("statsFim").value=hojeISO();document.getElementById("relInicio").value=hojeISO();document.getElementById("relFim").value=hojeISO();document.getElementById("finInicio").value=hojeISO();document.getElementById("finFim").value=hojeISO();
 function entrar(){if(document.getElementById("senha").value!==SENHA){alert("Senha incorreta.");return}document.getElementById("login").classList.add("hidden");document.getElementById("app").classList.remove("hidden");carregarTudo(true)}
 function tab(id,btn){paginaAtiva=id;document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");atualizarPaginaAtiva(true)}
 async function fbGet(path){const r=await fetch(`${FIREBASE_URL}${path}.json?t=${Date.now()}`);if(!r.ok)throw new Error("Erro Firebase GET "+path);return await r.json()}async function fbPut(path,data){const r=await fetch(`${FIREBASE_URL}${path}.json`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});if(!r.ok)throw new Error("Erro Firebase PUT "+path);return await r.json()}async function fbPatch(path,data){const r=await fetch(`${FIREBASE_URL}${path}.json`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});if(!r.ok)throw new Error("Erro Firebase PATCH "+path);return await r.json()}async function fbDelete(path){const r=await fetch(`${FIREBASE_URL}${path}.json`,{method:"DELETE"});if(!r.ok)throw new Error("Erro Firebase DELETE "+path);return await r.json()}
@@ -240,23 +240,75 @@ async function toggleAnuncio(id,ativar){
   }catch(e){ alert("Erro ao alterar anúncio: "+e.message); }
 }
 
+function somarStatsObj(dest, src){
+  src=src||{};
+  const aliases={
+    visitas:['visitas'],
+    carrinhos_iniciados:['carrinhos_iniciados','carrinhos'],
+    itens_adicionados:['itens_adicionados','itens_add'],
+    checkouts_abertos:['checkouts_abertos','finalizacoes_abertas'],
+    pedidos_confirmados:['pedidos_confirmados','pedidos_finalizados'],
+    cliques_anuncios:['cliques_anuncios','anuncios_cliques'],
+    cupons_usados:['cupons_usados']
+  };
+  Object.entries(aliases).forEach(([campo, nomes])=>{
+    let soma=0;
+    nomes.forEach(n=>soma += Number(src[n]||0));
+    dest[campo]=(dest[campo]||0)+soma;
+  });
+  return dest;
+}
 async function carregarStats(force=false){
-  const data=(document.getElementById("dataStats")?.value)||hojeISO();
+  const inicio=(document.getElementById("statsInicio")?.value)||hojeISO();
+  const fim=(document.getElementById("statsFim")?.value)||inicio;
   try{
-    const stats=await fbGet(`/analytics/dias/${data}`).catch(()=>({}))||{};
+    const total={};
+    for(const dia of intervaloDatas(inicio,fim)){
+      const daily=await fbGet(`/analytics/daily/${dia}`).catch(()=>({}))||{};
+      const dias=await fbGet(`/analytics/dias/${dia}`).catch(()=>({}))||{};
+      // Se os dois caminhos tiverem dados iguais, preferimos o maior valor por campo para não duplicar.
+      const tempDaily=somarStatsObj({}, daily);
+      const tempDias=somarStatsObj({}, dias);
+      const campos=['visitas','carrinhos_iniciados','itens_adicionados','checkouts_abertos','pedidos_confirmados','cliques_anuncios','cupons_usados'];
+      campos.forEach(c=>{ total[c]=(total[c]||0)+Math.max(Number(tempDaily[c]||0), Number(tempDias[c]||0)); });
+    }
+
     const online=await fbGet("/analytics/online").catch(()=>({}))||{};
     const agora=Date.now();
     const onlineCount=Object.values(online).filter(u=>{
-      const t=Number(u.ultimo_ativo||u.lastSeen||u.ultimoAcesso||0);
+      const t=Number(u.ultimo_ping||u.ultimo_ativo||u.lastSeen||u.ultimoAcesso||0);
       return t && (agora-t<65000);
     }).length;
-    if(document.getElementById("sVisitas")) sVisitas.textContent=stats.visitas||0;
+
+    const visitas=Number(total.visitas||0);
+    const carrinhos=Number(total.carrinhos_iniciados||0);
+    const pedidos=Number(total.pedidos_confirmados||0);
+    if(document.getElementById("sVisitas")) sVisitas.textContent=visitas;
     if(document.getElementById("sOnline")) sOnline.textContent=onlineCount;
-    if(document.getElementById("sCarrinhos")) sCarrinhos.textContent=stats.carrinhos_iniciados||0;
-    if(document.getElementById("sPedidos")) sPedidos.textContent=stats.pedidos_confirmados||0;
-    if(document.getElementById("sCliques")) sCliques.textContent=stats.cliques_anuncios||0;
-    if(document.getElementById("sCupons")) sCupons.textContent=stats.cupons_usados||0;
-  }catch(e){ console.error("Erro stats",e); }
+    if(document.getElementById("sCarrinhos")) sCarrinhos.textContent=carrinhos;
+    if(document.getElementById("sItensAdd")) sItensAdd.textContent=Number(total.itens_adicionados||0);
+    if(document.getElementById("sCheckouts")) sCheckouts.textContent=Number(total.checkouts_abertos||0);
+    if(document.getElementById("sPedidos")) sPedidos.textContent=pedidos;
+    if(document.getElementById("sCliques")) sCliques.textContent=Number(total.cliques_anuncios||0);
+    if(document.getElementById("sCupons")) sCupons.textContent=Number(total.cupons_usados||0);
+    if(document.getElementById("sConvVisitas")) sConvVisitas.textContent=visitas?((pedidos/visitas)*100).toFixed(1).replace('.',',')+'%':'0%';
+    if(document.getElementById("sConvCarrinhos")) sConvCarrinhos.textContent=carrinhos?((pedidos/carrinhos)*100).toFixed(1).replace('.',',')+'%':'0%';
+    if(document.getElementById("statsInfo")) statsInfo.textContent = inicio===fim ? `Mostrando estatísticas de ${inicio}` : `Mostrando estatísticas de ${inicio} até ${fim}`;
+  }catch(e){ console.error("Erro stats",e); if(document.getElementById("statsInfo")) statsInfo.textContent='Erro ao carregar estatísticas: '+e.message; }
+}
+function setPeriodoStats(tipo){
+  const h=hojeISO();
+  if(tipo==='hoje'){statsInicio.value=h;statsFim.value=h}else{statsInicio.value=dataMenosDias(Number(tipo)-1);statsFim.value=h}
+  carregarStats(true);
+}
+function intervaloDatas(inicio,fim){
+  const out=[];
+  let d=new Date(inicio+'T00:00:00');
+  const end=new Date(fim+'T00:00:00');
+  if(isNaN(d)||isNaN(end)) return [hojeISO()];
+  if(d>end){const tmp=d;d=end;end.setTime(tmp.getTime());}
+  while(d<=end){out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);d.setDate(d.getDate()+1);}
+  return out;
 }
 
 async function atualizarPaginaAtiva(force=false){
@@ -274,7 +326,7 @@ async function atualizarPaginaAtiva(force=false){
       await carregarAnuncios(force);
     }else if(force && paginaAtiva==="cardapio"){
       await carregarCardapio(force);
-    }else if(force && paginaAtiva==="stats"){
+    }else if(paginaAtiva==="stats"){
       await carregarStats(force);
     }else if(force && paginaAtiva==="espelho"){
       await carregarEspelho(force);
