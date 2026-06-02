@@ -1,1 +1,1 @@
-# adm-sistema
+Esta Aplicação web é para o gerenciamento da Hamburgueria, ele é ligado pelo servidor tbm da firebase para sincronizar as infomações do sistema de pedidos python e do cardapio web, assim posso ver informações da loja sem precisar estar no computador, posso acompanhar os relatorios, folha de pagamento dos funcionarios cadastrados, ver pedidos em preparo, ver pedidos finalizados e tambem gerenciar o cardapio web se fica fechado ou aberto. 
