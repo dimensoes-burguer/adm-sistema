@@ -304,7 +304,7 @@ function botoesFinalizadoPainel(idx){
 
 async function carregarPedidos(force=false){return (async()=>{await carregarSistema(force);const boxPrep=document.getElementById("listaPedidosEmPreparo"),boxNovos=document.getElementById("listaPedidosNovos"),info=document.getElementById("pedidosSyncInfo");info.textContent=sistemaCache.ultima_atualizacao?`Última sincronização do Python: ${sistemaCache.ultima_atualizacao}`:"Ainda sem sincronização do sistema Python.";const prepArr=preparoCache.map((p,i)=>[i,String(p.id||p.timestamp||i),p]).reverse();boxPrep.innerHTML=prepArr.length?prepArr.map(([idx,id,p])=>pedidoCardHtml(id,p,true,true)+botoesPedidoPainel(idx)).join(""):`<p class="small">Nenhum pedido em preparo sincronizado.</p>`;try{const novos=await fbGet("/pedidos_novos")||{};const novosArr=Object.entries(novos).reverse();boxNovos.innerHTML=novosArr.length?novosArr.map(([id,p])=>pedidoCardHtml(id,p,false,true)+`<div class="actions"><button class="yellow" onclick="marcarPedidoVisualizado('${id}')">Marcar visto</button><button class="red" onclick="apagarPedidoNovo('${id}')">Apagar do Firebase</button></div>`).join(""):`<p class="small">Nenhum pedido novo pendente em /pedidos_novos.</p>`}catch(e){boxNovos.innerHTML=`<p style="color:#fca5a5">Erro ao carregar novos: ${e.message}</p>`}})()}
 async function marcarPedidoVisualizado(id){await fbPatch(`/pedidos_novos/${id}`,{visualizado_mobile:true});carregarPedidos(true)}async function apagarPedidoNovo(id){if(!confirm("Apagar este pedido de /pedidos_novos? Use com cuidado."))return;await fbDelete(`/pedidos_novos/${id}`);carregarPedidos(true)}
-function parseDataPedido(p){const campos=[p.data_finalizacao,p.data,p.data_pedido,p.timestamp,p.hora];for(const c of campos){if(!c)continue;if(typeof c==='number'){const d=new Date(c>9999999999?c:c*1000);if(!isNaN(d))return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}const s=String(c);let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return `${m[1]}-${m[2]}-${m[3]}`;m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)return `${m[3]}-${m[2]}-${m[1]}`}return hojeISO()}function parseDateTimePedido(p){
+function parseDataPedido(p){const campos=[p.data_iso,p.data_finalizacao,p.data,p.data_pedido,p.timestamp,p.hora];for(const c of campos){if(!c)continue;if(typeof c==='number'){const d=new Date(c>9999999999?c:c*1000);if(!isNaN(d))return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}const s=String(c);let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return `${m[1]}-${m[2]}-${m[3]}`;m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)return `${m[3]}-${m[2]}-${m[1]}`}return hojeISO()}function parseDateTimePedido(p){
   const ts=p.timestamp||p.data_timestamp||p.finalizado_em_timestamp;
   if(ts){const d=new Date(Number(ts)>9999999999?Number(ts):Number(ts)*1000);if(!isNaN(d))return d.getTime();}
   const data=parseDataPedido(p);
@@ -366,6 +366,7 @@ function dataISOFuncionario(data){
 function dataPedidoISO(p){ return parseDataPedido(p); }
 function taxaEntregaPedido(p){ return Number(p.taxa_entrega||p.valor_entrega||p.frete||0) || 0; }
 function bonusEntregaPedido(p){
+  if(p && p.bonus_entrega!==undefined && p.bonus_entrega!==null && p.bonus_entrega!=='') return Number(p.bonus_entrega)||0;
   const tipo=tipoNormalizado(p);
   if(tipo.includes('IFOOD') || tipo.includes('99')) return 1;
   const taxa=taxaEntregaPedido(p);
@@ -377,7 +378,8 @@ function entregadorDoPedido(p){return String(p.entregador||p.entregador_nome||p.
 function entregasFuncionario(f,inicio='',fim=''){
   const nome=String(f.nome||'').trim().toUpperCase();
   if(!nome) return [];
-  return finalizadosCachePy.filter(p=>{
+  const base=finalizadosCachePy.length?finalizadosCachePy:(Array.isArray(f.entregas_pendentes_web)?f.entregas_pendentes_web:[]);
+  return base.filter(p=>{
     if(entregadorDoPedido(p)!==nome) return false;
     const data=dataPedidoISO(p);
     if(inicio && data<inicio) return false;
@@ -409,7 +411,7 @@ function calcularPagamentoPendenteFuncionario(f){
   const nome=String(f.nome||'').trim().toUpperCase();
   let bonusEntregas=0;
   let entregasPendentes=0;
-  finalizadosCachePy.forEach(p=>{
+  entregasFuncionario(f).forEach(p=>{
     const entregador=String(p.entregador||p.entregador_nome||'').trim().toUpperCase();
     if(!nome || entregador!==nome) return;
     const data=dataPedidoISO(p);
