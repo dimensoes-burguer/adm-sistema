@@ -25,7 +25,7 @@
 </main></section>
 <section id="funcionarioApp" class="hidden"><div class="header"><div class="header-row"><div class="brand"><div class="mini-logo">🍔</div><div><div class="brand-title">ÁREA DO FUNCIONÁRIO</div><div class="brand-sub" id="funcSub">Dimensões Burguer</div></div></div><button class="secondary" onclick="sair()">Sair</button></div></div><main><section class="card employee-hero"><h2 id="funcNome">Funcionário</h2><p id="funcCargo" class="small"></p><div class="big-money" id="funcValorReceber">R$ 0,00</div><p class="small">Valor a receber considerando dias a receber, diária, bonificação manual e bônus por entrega.</p><div class="pill-line"><span class="mini-pill" id="funcProxPag">Próximo pagamento: não informado</span><span class="mini-pill" id="funcTelefone"></span></div></section><section class="grid2"><div class="metric"><div class="label" id="lblMetricDiasPend">DIAS A RECEBER</div><div class="value" id="funcDiasPend">0</div></div><div class="metric"><div class="label" id="lblMetricEntregas">ENTREGAS A RECEBER</div><div class="value" id="funcEntregas">0</div></div></section><section class="card"><h3>Detalhes do pagamento</h3><div id="funcDetalhesPagamento"></div></section><section class="card"><h3>DIAS A RECEBER / ENTREGAS A RECEBER</h3><p class="small" id="funcAjudaDias">Clique em um dia para ver as entregas.</p><div id="funcFiltroEntregas" class="filter-inline hidden"><div class="form-row"><label>De</label><input type="date" id="funcFiltroInicio"></div><div class="form-row"><label>Até</label><input type="date" id="funcFiltroFim"></div><button onclick="renderPainelFuncionario()">Filtrar</button><button class="secondary" onclick="limparFiltroEntregasFuncionario()">Limpar</button></div><div id="funcResumoFiltro" class="grid2 filter-summary hidden"><div class="metric"><div class="label">TOTAL A RECEBER NO FILTRO</div><div class="value" id="funcTotalFiltro">R$ 0,00</div></div><div class="metric"><div class="label">ENTREGAS A RECEBER NO FILTRO</div><div class="value" id="funcQtdEntregasFiltro">0</div></div><div class="metric"><div class="label">TOTAL SÓ DE ENTREGAS NO FILTRO</div><div class="value" id="funcTotalEntregasFiltro">R$ 0,00</div></div><div class="metric"><div class="label">DIAS A RECEBER NO FILTRO</div><div class="value" id="funcDiasFiltro">0</div></div></div><div class="work-days" id="funcListaDias"></div><div id="funcDetalheDia"></div></section><section class="card"><h3>Observações</h3><p id="funcObs" class="small"></p></section></main></section>
 <script>
-const FIREBASE_URL="https://dimensoesburguer-85c0f-default-rtdb.firebaseio.com";const FIREBASE_API_KEY="AIzaSyAEFQV4CyUXSh-tswjS8Qx25Tk2aCDS6uQ";const ADMIN_EMAIL="admin@dimensoesburguer.com";let firebaseIdToken="";let lojaAberta=false;let paginaAtiva="inicio";let atualizando=false;let sistemaCache={};let preparoCache=[];let finalizadosCachePy=[];let funcionariosCache={};let tiposExpandidos={};let modoUsuario=null;let funcionarioLogado=null;let diaFuncionarioExpandido=null;
+const FIREBASE_URL="https://dimensoesburguer-85c0f-default-rtdb.firebaseio.com";const FIREBASE_API_KEY="AIzaSyAEFQV4CyUXSh-tswjS8Qx25Tk2aCDS6uQ";const ADMIN_EMAIL="admin@dimensoesburguer.com";let firebaseIdToken="";let firebaseUid="";let lojaAberta=false;let paginaAtiva="inicio";let atualizando=false;let sistemaCache={};let preparoCache=[];let finalizadosCachePy=[];let funcionariosCache={};let tiposExpandidos={};let modoUsuario=null;let funcionarioLogado=null;let diaFuncionarioExpandido=null;
 function hojeISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function dataMenosDias(dias){const d=new Date();d.setDate(d.getDate()-Number(dias||0));return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 document.getElementById("dataStats").value=hojeISO();document.getElementById("relInicio").value=hojeISO();document.getElementById("relFim").value=hojeISO();document.getElementById("finInicio").value=hojeISO();document.getElementById("finFim").value=hojeISO();
@@ -43,6 +43,7 @@ async function firebaseAuthEntrar(email,senha){
   const data=await r.json().catch(()=>({}));
   if(!r.ok) throw new Error(data.error?.message||"Login Firebase recusado");
   firebaseIdToken=data.idToken||"";
+  firebaseUid=data.localId||"";
   return data;
 }
 function fbUrl(path){
@@ -52,9 +53,9 @@ function fbUrl(path){
 async function entrar(){
   const usuario=String(document.getElementById("usuario").value||"").trim().toLowerCase();
   const senha=String(document.getElementById("senha").value||"");
-  if(usuario==="" || usuario==="admin" || usuario.includes("@")){
+  if(usuario==="" || usuario==="admin" || usuario===ADMIN_EMAIL){
     try{
-      await firebaseAuthEntrar(usuario.includes("@")?usuario:ADMIN_EMAIL,senha);
+      await firebaseAuthEntrar(usuario===ADMIN_EMAIL?usuario:ADMIN_EMAIL,senha);
       modoUsuario="admin";
       document.getElementById("login").classList.add("hidden");
       document.getElementById("app").classList.remove("hidden");
@@ -67,21 +68,23 @@ async function entrar(){
     }
   }
   try{
-    await carregarSistema(true);
-    const senhaHash=await hashTextoSHA256(senha);
-    const hash=senhaHash;
-    const funcionarios=Object.values(funcionariosCache||{});
-    const func=funcionarios.find(f=>String(f.web_usuario||"").trim().toLowerCase()===usuario && f.web_acesso_ativo!==false && String(f.web_senha_hash||"")===hash);
-    if(!func){alert("Usuário ou senha incorretos, ou login web desativado.");return}
+    const authData=await firebaseAuthEntrar(usuario,senha);
+    const uid=authData.localId||firebaseUid;
+    const vinculo=await fbGet(`/funcionarios_auth/${uid}`).catch(()=>null);
+    const funcId=String((vinculo&&vinculo.funcionario_id)||vinculo||"").trim();
+    if(!funcId){alert("Este login Firebase ainda não está vinculado a um funcionário.");return}
+    const func=await fbGet(`/sistema/funcionarios/${funcId}`).catch(()=>null);
+    if(!func||func.web_acesso_ativo===false){alert("Funcionário não encontrado ou login web desativado.");return}
+    func.id=func.id||funcId;
     modoUsuario="funcionario";
     funcionarioLogado=func;
+    funcionariosCache={[funcId]:func};
     document.getElementById("login").classList.add("hidden");
     document.getElementById("app").classList.add("hidden");
     document.getElementById("funcionarioApp").classList.remove("hidden");
-    await carregarSistema(true);
     renderPainelFuncionario();
   }catch(e){
-    alert("Erro ao entrar: "+e.message);
+    alert("Erro ao entrar como funcionário: "+e.message);
   }
 }
 function sair(){location.reload();}
