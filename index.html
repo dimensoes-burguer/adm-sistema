@@ -10,11 +10,11 @@
 </style>
 </head>
 <body>
-<section id="login"><div class="login-card"><div class="logo">🍔</div><h1>Dimensões Burguer</h1><p>Painel mobile de controle e área do funcionário.</p><div class="form-row"><label>Usuário</label><input type="text" id="usuario" placeholder="admin ou usuário do funcionário"/></div><div class="form-row"><label>Senha</label><input type="password" id="senha" placeholder="Digite a senha"/></div><button class="full" onclick="entrar()">Entrar</button><p class="small">Admin: use <b>admin</b> e a senha mestre. Funcionário: use o usuário e senha cadastrados na aba Funcionários do sistema.</p></div></section>
+<section id="login"><div class="login-card"><div class="logo">🍔</div><h1>Dimensões Burguer</h1><p>Painel mobile de controle e área do funcionário.</p><div class="form-row"><label>Usuário</label><input type="text" id="usuario" placeholder="admin ou e-mail do Firebase Auth"/></div><div class="form-row"><label>Senha</label><input type="password" id="senha" placeholder="Digite a senha"/></div><button class="full" onclick="entrar()">Entrar</button><p class="small">Admin: use <b>admin</b> ou o e-mail cadastrado no Firebase Authentication.</p></div></section>
 <section id="app" class="hidden"><div class="header"><div class="header-row"><div class="brand"><div class="mini-logo">🍔</div><div><div class="brand-title">DIMENSÕES BURGUER</div><div class="brand-sub">Painel Mobile</div></div></div><div id="lojaStatus" class="status-pill closed">LOJA</div></div></div>
 <div class="tabs"><button class="active" onclick="tab('inicio',this)">Início</button><button onclick="tab('pedidos',this)">Pedidos</button><button onclick="tab('finalizados',this)">Finalizados</button><button onclick="tab('cardapio',this)">Cardápio</button><button onclick="tab('cupons',this)">Cupons</button><button onclick="tab('anuncios',this)">Anúncios</button><button onclick="tab('stats',this)">Estatísticas</button><button onclick="tab('espelho',this)">Sistema PY</button></div>
 <main>
-<section id="inicio" class="page"><div class="card"><h2>Controle rápido</h2><p><span class="auto-dot"></span>Atualização automática a cada 1 segundo.</p><div class="grid2"><button id="btnLoja" onclick="alternarLoja()">Carregando loja...</button><button class="secondary" onclick="atualizarPaginaAtiva(true)">Atualizar agora</button></div></div><div class="grid2"><div class="metric"><div class="label">Em preparo</div><div class="value" id="mPreparoInicio">0</div></div><div class="metric"><div class="label">Funcionários</div><div class="value" id="mFuncInicio">0</div></div><div class="metric"><div class="label">Cupons ativos</div><div class="value" id="mCupons">0</div></div><div class="metric"><div class="label">Anúncios ativos</div><div class="value" id="mAnuncios">0</div></div></div><div class="notice">A aba <b>Pedidos</b> mostra os pedidos em preparo sincronizados pelo sistema Python. <code>/pedidos_novos</code> é só a caixa de entrada do web antes do Python baixar.</div></section>
+<section id="inicio" class="page"><div class="card"><h2>Controle rápido</h2><p>Use o botão para atualizar os dados quando precisar.</p><div class="grid2"><button id="btnLoja" onclick="alternarLoja()">Carregando loja...</button><button class="secondary" onclick="atualizarPaginaAtiva(true)">Atualizar agora</button></div></div><div class="grid2"><div class="metric"><div class="label">Em preparo</div><div class="value" id="mPreparoInicio">0</div></div><div class="metric"><div class="label">Funcionários</div><div class="value" id="mFuncInicio">0</div></div><div class="metric"><div class="label">Cupons ativos</div><div class="value" id="mCupons">0</div></div><div class="metric"><div class="label">Anúncios ativos</div><div class="value" id="mAnuncios">0</div></div></div><div class="notice">A aba <b>Pedidos</b> mostra os pedidos em preparo sincronizados pelo sistema Python. <code>/pedidos_novos</code> é só a caixa de entrada do web antes do Python baixar.</div></section>
 <section id="pedidos" class="page hidden"><div class="card"><h2>Pedidos em preparo</h2><p>Mostra os pedidos vivos do sistema Python. iFood aparece em vermelho e 99 Food em amarelo.</p><button onclick="carregarPedidos(true)">Atualizar pedidos</button><p class="small" id="pedidosSyncInfo">Aguardando sincronização...</p></div><div class="card"><h3>Em Preparo / Pronto no sistema</h3><div id="listaPedidosEmPreparo"></div></div><div class="card"><h3>Pedidos novos web ainda não baixados</h3><p class="small">Normalmente fica vazio quando o Python já puxou os pedidos para Em Preparo.</p><div id="listaPedidosNovos"></div></div></section>
 <section id="finalizados" class="page hidden"><div class="card"><h2>Pedidos finalizados</h2><p>Começa mostrando hoje. Você pode filtrar por qualquer intervalo.</p><div class="grid2"><div class="form-row"><label>De</label><input type="date" id="finInicio"></div><div class="form-row"><label>Até</label><input type="date" id="finFim"></div></div><div class="actions"><button onclick="setPeriodoFinalizados('hoje')">Hoje</button><button class="secondary" onclick="setPeriodoFinalizados('7')">7 dias</button><button class="secondary" onclick="setPeriodoFinalizados('30')">30 dias</button><button class="purple" onclick="renderFinalizados()">Ver período</button></div></div><div class="grid2"><div class="metric"><div class="label">Pedidos no período</div><div class="value" id="finQtd">0</div></div><div class="metric"><div class="label">Receita no período</div><div class="value" id="finReceita">R$ 0,00</div></div></div><div class="card"><h3>Lista dos finalizados</h3><div id="listaFinalizadosFiltro"></div></div></section>
 <section id="cardapio" class="page hidden"><div class="card"><h2>Cardápio Web</h2><p>Visualização rápida do cardápio salvo no Firebase.</p><div id="listaCardapio"></div></div></section>
@@ -25,7 +25,7 @@
 </main></section>
 <section id="funcionarioApp" class="hidden"><div class="header"><div class="header-row"><div class="brand"><div class="mini-logo">🍔</div><div><div class="brand-title">ÁREA DO FUNCIONÁRIO</div><div class="brand-sub" id="funcSub">Dimensões Burguer</div></div></div><button class="secondary" onclick="sair()">Sair</button></div></div><main><section class="card employee-hero"><h2 id="funcNome">Funcionário</h2><p id="funcCargo" class="small"></p><div class="big-money" id="funcValorReceber">R$ 0,00</div><p class="small">Valor a receber considerando dias a receber, diária, bonificação manual e bônus por entrega.</p><div class="pill-line"><span class="mini-pill" id="funcProxPag">Próximo pagamento: não informado</span><span class="mini-pill" id="funcTelefone"></span></div></section><section class="grid2"><div class="metric"><div class="label" id="lblMetricDiasPend">DIAS A RECEBER</div><div class="value" id="funcDiasPend">0</div></div><div class="metric"><div class="label" id="lblMetricEntregas">ENTREGAS A RECEBER</div><div class="value" id="funcEntregas">0</div></div></section><section class="card"><h3>Detalhes do pagamento</h3><div id="funcDetalhesPagamento"></div></section><section class="card"><h3>DIAS A RECEBER / ENTREGAS A RECEBER</h3><p class="small" id="funcAjudaDias">Clique em um dia para ver as entregas.</p><div id="funcFiltroEntregas" class="filter-inline hidden"><div class="form-row"><label>De</label><input type="date" id="funcFiltroInicio"></div><div class="form-row"><label>Até</label><input type="date" id="funcFiltroFim"></div><button onclick="renderPainelFuncionario()">Filtrar</button><button class="secondary" onclick="limparFiltroEntregasFuncionario()">Limpar</button></div><div id="funcResumoFiltro" class="grid2 filter-summary hidden"><div class="metric"><div class="label">TOTAL A RECEBER NO FILTRO</div><div class="value" id="funcTotalFiltro">R$ 0,00</div></div><div class="metric"><div class="label">ENTREGAS A RECEBER NO FILTRO</div><div class="value" id="funcQtdEntregasFiltro">0</div></div><div class="metric"><div class="label">TOTAL SÓ DE ENTREGAS NO FILTRO</div><div class="value" id="funcTotalEntregasFiltro">R$ 0,00</div></div><div class="metric"><div class="label">DIAS A RECEBER NO FILTRO</div><div class="value" id="funcDiasFiltro">0</div></div></div><div class="work-days" id="funcListaDias"></div><div id="funcDetalheDia"></div></section><section class="card"><h3>Observações</h3><p id="funcObs" class="small"></p></section></main></section>
 <script>
-const FIREBASE_URL="https://dimensoesburguer-85c0f-default-rtdb.firebaseio.com";const SENHA="GS1973";let lojaAberta=false;let paginaAtiva="inicio";let atualizando=false;let sistemaCache={};let preparoCache=[];let finalizadosCachePy=[];let funcionariosCache={};let tiposExpandidos={};let modoUsuario=null;let funcionarioLogado=null;let diaFuncionarioExpandido=null;
+const FIREBASE_URL="https://dimensoesburguer-85c0f-default-rtdb.firebaseio.com";const FIREBASE_API_KEY="AIzaSyAEFQV4CyUXSh-tswjS8Qx25Tk2aCDS6uQ";const ADMIN_EMAIL="admin@dimensoesburguer.com";let firebaseIdToken="";let lojaAberta=false;let paginaAtiva="inicio";let atualizando=false;let sistemaCache={};let preparoCache=[];let finalizadosCachePy=[];let funcionariosCache={};let tiposExpandidos={};let modoUsuario=null;let funcionarioLogado=null;let diaFuncionarioExpandido=null;
 function hojeISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function dataMenosDias(dias){const d=new Date();d.setDate(d.getDate()-Number(dias||0));return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 document.getElementById("dataStats").value=hojeISO();document.getElementById("relInicio").value=hojeISO();document.getElementById("relFim").value=hojeISO();document.getElementById("finInicio").value=hojeISO();document.getElementById("finFim").value=hojeISO();
@@ -34,20 +34,42 @@ async function hashTextoSHA256(texto){
   const hash=await crypto.subtle.digest("SHA-256",bytes);
   return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
+async function firebaseAuthEntrar(email,senha){
+  const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({email,password:senha,returnSecureToken:true})
+  });
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(data.error?.message||"Login Firebase recusado");
+  firebaseIdToken=data.idToken||"";
+  return data;
+}
+function fbUrl(path){
+  const sep=path.includes("?")?"&":"?";
+  return `${FIREBASE_URL}${path}.json${firebaseIdToken?`${sep}auth=${encodeURIComponent(firebaseIdToken)}`:""}`;
+}
 async function entrar(){
   const usuario=String(document.getElementById("usuario").value||"").trim().toLowerCase();
   const senha=String(document.getElementById("senha").value||"");
-  if((usuario==="" || usuario==="admin") && senha===SENHA){
-    modoUsuario="admin";
-    document.getElementById("login").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
-    document.getElementById("funcionarioApp").classList.add("hidden");
-    await carregarTudo(true);
-    return;
+  if(usuario==="" || usuario==="admin" || usuario.includes("@")){
+    try{
+      await firebaseAuthEntrar(usuario.includes("@")?usuario:ADMIN_EMAIL,senha);
+      modoUsuario="admin";
+      document.getElementById("login").classList.add("hidden");
+      document.getElementById("app").classList.remove("hidden");
+      document.getElementById("funcionarioApp").classList.add("hidden");
+      await carregarTudo(true);
+      return;
+    }catch(e){
+      alert("Login Firebase incorreto ou usuário admin não cadastrado. "+e.message);
+      return;
+    }
   }
   try{
     await carregarSistema(true);
-    const hash=await hashTextoSHA256(senha);
+    const senhaHash=await hashTextoSHA256(senha);
+    const hash=senhaHash;
     const funcionarios=Object.values(funcionariosCache||{});
     const func=funcionarios.find(f=>String(f.web_usuario||"").trim().toLowerCase()===usuario && f.web_acesso_ativo!==false && String(f.web_senha_hash||"")===hash);
     if(!func){alert("Usuário ou senha incorretos, ou login web desativado.");return}
@@ -64,11 +86,35 @@ async function entrar(){
 }
 function sair(){location.reload();}
 function tab(id,btn){paginaAtiva=id;document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");atualizarPaginaAtiva(true)}
-async function fbGet(path){const r=await fetch(`${FIREBASE_URL}${path}.json?t=${Date.now()}`);if(!r.ok)throw new Error("Erro Firebase GET "+path);return await r.json()}async function fbPut(path,data){const r=await fetch(`${FIREBASE_URL}${path}.json`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});if(!r.ok)throw new Error("Erro Firebase PUT "+path);return await r.json()}async function fbPatch(path,data){const r=await fetch(`${FIREBASE_URL}${path}.json`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});if(!r.ok)throw new Error("Erro Firebase PATCH "+path);return await r.json()}async function fbDelete(path){const r=await fetch(`${FIREBASE_URL}${path}.json`,{method:"DELETE"});if(!r.ok)throw new Error("Erro Firebase DELETE "+path);return await r.json()}
+async function fbGet(path){const url=fbUrl(path)+(firebaseIdToken?"&":"?")+"t="+Date.now();const r=await fetch(url);if(!r.ok)throw new Error("Erro Firebase GET "+path);return await r.json()}async function fbPut(path,data){const r=await fetch(fbUrl(path),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});if(!r.ok)throw new Error("Erro Firebase PUT "+path);return await r.json()}async function fbPatch(path,data){const r=await fetch(fbUrl(path),{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});if(!r.ok)throw new Error("Erro Firebase PATCH "+path);return await r.json()}async function fbDelete(path){const r=await fetch(fbUrl(path),{method:"DELETE"});if(!r.ok)throw new Error("Erro Firebase DELETE "+path);return await r.json()}
 function formatMoney(v){const n=Number(v||0);return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}function pedidoTotal(p){return Number(p.valor_cobrado??p.total_liquido??p.total_final??p.total??0)}
-function pedidoLiquido(p){const total=pedidoTotal(p); if(p.receita_liquida!==undefined)return Number(p.receita_liquida||0); if(p.lucro_liquido!==undefined)return Number(p.lucro_liquido||0); return total-Number(p.custo_estimado||0);}function tipoNormalizado(p){return String(p.tipo||"").toUpperCase().trim()}function classeTipo(p){const t=tipoNormalizado(p);if(t.includes("IFOOD"))return "ifood";if(t.includes("99"))return "food99";return ""}function badgeTipo(p){const cls=classeTipo(p);return `<span class="badge ${cls}">${p.tipo||"PEDIDO"}</span>`}
-async function carregarTudo(force=false){await Promise.allSettled([carregarLoja(),carregarSistema(force),carregarCupons(),carregarAnuncios(),carregarStats()]);atualizarInicio()}
-async function carregarSistema(force=false){try{const sistema=await fbGet("/sistema")||{};sistemaCache=sistema;const prep=await fbGet("/sistema/em_preparo_lista").catch(()=>null);preparoCache=Array.isArray(prep)?prep:(Array.isArray(sistema.em_preparo_lista)?sistema.em_preparo_lista:Object.values(sistema.em_preparo||{}));const fin=await fbGet("/sistema/finalizados_lista").catch(()=>null);finalizadosCachePy=Array.isArray(fin)?fin:(Array.isArray(sistema.finalizados_lista)?sistema.finalizados_lista:Object.values(sistema.finalizados||{}));funcionariosCache=sistema.funcionarios||{};document.getElementById("ultimaSyncPy").textContent=sistema.ultima_atualizacao?`Última atualização: ${sistema.ultima_atualizacao}`:"Ainda sem atualização do sistema Python."}catch(e){console.error(e)}}
+function pedidoLiquido(p){const total=pedidoTotal(p); if(p.receita_liquida!==undefined)return Number(p.receita_liquida||0); if(p.lucro_liquido!==undefined)return Number(p.lucro_liquido||0); return total-Number(p.custo_estimado||0);}function tipoNormalizado(p){return String(p.tipo||"").toUpperCase().trim()}function classeTipo(p){const t=tipoNormalizado(p);if(t.includes("IFOOD"))return "ifood";if(t.includes("99"))return "food99";return ""}function badgeTipo(p){const cls=classeTipo(p);return `<span class="badge ${cls}">${escapeHtml(p.tipo||"PEDIDO")}</span>`}
+async function carregarTudo(force=false){await Promise.allSettled([carregarLoja(),carregarResumoSistema(force),carregarCupons(),carregarAnuncios()]);atualizarInicio()}
+async function carregarSistema(force=false){
+  try{
+    const [ultima,prep,fin,funcs]=await Promise.all([
+      fbGet("/sistema/ultima_atualizacao").catch(()=>null),
+      fbGet("/sistema/em_preparo_lista").catch(()=>null),
+      fbGet("/sistema/finalizados_lista").catch(()=>null),
+      fbGet("/sistema/funcionarios").catch(()=>({}))
+    ]);
+    sistemaCache={ultima_atualizacao:ultima||""};
+    preparoCache=Array.isArray(prep)?prep:Object.values(prep||{});
+    finalizadosCachePy=Array.isArray(fin)?fin:Object.values(fin||{});
+    funcionariosCache=funcs||{};
+    document.getElementById("ultimaSyncPy").textContent=ultima?`Última atualização: ${ultima}`:"Ainda sem atualização do sistema Python.";
+  }catch(e){console.error(e)}
+}
+async function carregarResumoSistema(force=false){
+  try{
+    const [prep,funcs]=await Promise.all([
+      fbGet("/sistema/em_preparo_lista").catch(()=>null),
+      fbGet("/sistema/funcionarios").catch(()=>({}))
+    ]);
+    preparoCache=Array.isArray(prep)?prep:Object.values(prep||{});
+    funcionariosCache=funcs||{};
+  }catch(e){console.error(e)}
+}
 async function carregarLoja(){try{lojaAberta=!!(await fbGet("/config/loja_aberta"));const pill=document.getElementById("lojaStatus"),btn=document.getElementById("btnLoja");if(lojaAberta){pill.textContent="LOJA WEB: ABERTA";pill.className="status-pill open";btn.textContent="Fechar loja web";btn.className="red full"}else{pill.textContent="LOJA WEB: FECHADA";pill.className="status-pill closed";btn.textContent="Abrir loja web";btn.className="full"}}catch(e){console.error(e)}}async function alternarLoja(){try{await fbPut("/config/loja_aberta",!lojaAberta);await carregarLoja()}catch(e){alert("Erro ao alterar loja: "+e.message)}}
 function atualizarInicio(){document.getElementById("mPreparoInicio").textContent=preparoCache.length||0;document.getElementById("mFuncInicio").textContent=Object.keys(funcionariosCache||{}).length||0;}
 
@@ -78,9 +124,9 @@ function itemPedidoHtml(i){
   const extras=Array.isArray(i.extras)&&i.extras.length?`<div class="small" style="margin-top:3px;color:#bbf7d0">${i.extras.map(e=>`+ ${escapeHtml(e.nome||'Adicional')} ${Number(e.preco||0)>0?formatMoney(e.preco):''}`).join('<br>')}</div>`:'';
   return `<div class="item-row"><span>${escapeHtml(i.nome||'Item')}${detalhes}${extras}</span><span>${formatMoney(i.preco||0)}</span></div>`;
 }
-function pedidoCardHtml(id,p,mostrarStatus=false,detalhado=false){const itens=Array.isArray(p.itens)?p.itens:[];const cupom=p.cupom?(typeof p.cupom==="string"?p.cupom:(p.cupom.codigo||"-")):"";const cls=classeTipo(p);return `<div class="order ${cls}"><div class="order-top"><div><h3>${p.nome||"Cliente"}</h3>${badgeTipo(p)}${mostrarStatus?`<span class="badge" style="background:${String(p.status||"").toUpperCase()==='PRONTO'?'#16a34a':'#2563eb'}">${p.status||"EM PREPARO"}</span>`:""}<div class="small">${p.hora||""} ${p.data||p.data_finalizacao||""}</div></div><strong>${formatMoney(pedidoTotal(p))}</strong></div><div>${itens.map(i=>itemPedidoHtml(i)).join("")}</div>${detalhado?detalhesPedidoHtml(p,cupom):resumoPedidoHtml(p,cupom)}</div>`}
-function resumoPedidoHtml(p,cupom){return `${p.entregador?`<p class="small"><b>Entregador:</b> ${p.entregador}</p>`:""}${p.endereco?`<p class="small"><b>Endereço:</b> ${p.endereco}</p>`:""}${p.obs?`<p class="small"><b>Obs:</b> ${p.obs}</p>`:""}${cupom?`<p class="small"><b>Cupom:</b> ${cupom} | Desconto: ${formatMoney(p.desconto||p.desconto_cupom||0)}</p>`:""}`}
-function detalhesPedidoHtml(p,cupom){return `<div class="muted-divider"></div>${p.pagamento?`<p class="small"><b>Pagamento:</b> ${p.pagamento}</p>`:""}${p.entregador?`<p class="small"><b>Entregador:</b> ${p.entregador}</p>`:""}${p.endereco?`<p class="small"><b>Endereço:</b> ${p.endereco}</p>`:""}${p.obs?`<p class="small"><b>Observação:</b> ${p.obs}</p>`:""}<p class="small"><b>Taxa entrega:</b> ${formatMoney(p.taxa_entrega||0)} | <b>Acréscimos:</b> ${formatMoney(p.acrescimos||0)}</p>${cupom?`<p class="small"><b>Cupom:</b> ${cupom} | <b>Desconto:</b> ${formatMoney(p.desconto||p.desconto_cupom||0)}</p>`:""}<p class="small"><b>Total:</b> ${formatMoney(pedidoTotal(p))}</p>`}
+function pedidoCardHtml(id,p,mostrarStatus=false,detalhado=false){const itens=Array.isArray(p.itens)?p.itens:[];const cupom=p.cupom?(typeof p.cupom==="string"?p.cupom:(p.cupom.codigo||"-")):"";const cls=classeTipo(p);const status=String(p.status||"EM PREPARO");return `<div class="order ${cls}"><div class="order-top"><div><h3>${escapeHtml(p.nome||"Cliente")}</h3>${badgeTipo(p)}${mostrarStatus?`<span class="badge" style="background:${status.toUpperCase()==='PRONTO'?'#16a34a':'#2563eb'}">${escapeHtml(status)}</span>`:""}<div class="small">${escapeHtml(p.hora||"")} ${escapeHtml(p.data||p.data_finalizacao||"")}</div></div><strong>${formatMoney(pedidoTotal(p))}</strong></div><div>${itens.map(i=>itemPedidoHtml(i)).join("")}</div>${detalhado?detalhesPedidoHtml(p,cupom):resumoPedidoHtml(p,cupom)}</div>`}
+function resumoPedidoHtml(p,cupom){return `${p.entregador?`<p class="small"><b>Entregador:</b> ${escapeHtml(p.entregador)}</p>`:""}${p.endereco?`<p class="small"><b>Endereço:</b> ${escapeHtml(p.endereco)}</p>`:""}${p.obs?`<p class="small"><b>Obs:</b> ${escapeHtml(p.obs)}</p>`:""}${cupom?`<p class="small"><b>Cupom:</b> ${escapeHtml(cupom)} | Desconto: ${formatMoney(p.desconto||p.desconto_cupom||0)}</p>`:""}`}
+function detalhesPedidoHtml(p,cupom){return `<div class="muted-divider"></div>${p.pagamento?`<p class="small"><b>Pagamento:</b> ${escapeHtml(p.pagamento)}</p>`:""}${p.entregador?`<p class="small"><b>Entregador:</b> ${escapeHtml(p.entregador)}</p>`:""}${p.endereco?`<p class="small"><b>Endereço:</b> ${escapeHtml(p.endereco)}</p>`:""}${p.obs?`<p class="small"><b>Observação:</b> ${escapeHtml(p.obs)}</p>`:""}<p class="small"><b>Taxa entrega:</b> ${formatMoney(p.taxa_entrega||0)} | <b>Acréscimos:</b> ${formatMoney(p.acrescimos||0)}</p>${cupom?`<p class="small"><b>Cupom:</b> ${escapeHtml(cupom)} | <b>Desconto:</b> ${formatMoney(p.desconto||p.desconto_cupom||0)}</p>`:""}<p class="small"><b>Total:</b> ${formatMoney(pedidoTotal(p))}</p>`}
 
 function pedidoIdPainel(p, fallback=''){
   return String(p?.id || p?.pedido_web_id || p?.firebase_key || p?.timestamp || fallback || '').trim();
@@ -610,16 +656,5 @@ async function atualizarPaginaAtiva(force=false){
   }
 }
 
-setInterval(async ()=>{
-  if(!document.getElementById("funcionarioApp").classList.contains("hidden")){
-    await carregarSistema(false);
-    renderPainelFuncionario();
-    return;
-  }
-  if(document.getElementById("app").classList.contains("hidden")) return;
-  if(["pedidos","finalizados","cupons","anuncios"].includes(paginaAtiva)){
-    atualizarPaginaAtiva(false);
-  }
-},1000);
 </script>
 </body></html>
